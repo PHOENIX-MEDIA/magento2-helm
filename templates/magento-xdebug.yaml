@@ -1,0 +1,83 @@
+{{- if .Values.xdebug.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "magento.name" . }}-xdebug
+  labels:
+    helm.sh/chart: {{ include "magento.chart" . }}
+    app.kubernetes.io/name: {{ include "magento.name" . }}-xdebug
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "magento.name" . }}-xdebug
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+{{ toYaml .Values.magento.strategy | indent 4 }}
+  template:
+    metadata:
+      {{- with .Values.xdebug.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ include "magento.name" . }}-xdebug
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      affinity: {{ toYaml .Values.xdebug.affinity | nindent 8 }}
+      securityContext: {{- toYaml .Values.xdebug.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: magento-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "magento.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.magento.extraVolumes }}
+        {{ toYaml .Values.magento.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        - image: {{ template "magento.image" . }}
+          env: {{ toYaml .Values.xdebug.env | nindent 10 }}
+          {{- if .Values.xdebug.reuseMagentoEnvs }}
+          {{ toYaml .Values.magento.env | nindent 10 }}
+          {{- end }}
+          imagePullPolicy:  {{ .Values.image.pullPolicy | quote }}
+          name: {{ include "magento.name" . }}-xdebug
+          resources: {{ toYaml .Values.xdebug.resources | nindent 12 }}
+          securityContext: {{ toYaml .Values.xdebug.securityContext | nindent 12 }}
+          lifecycle: {{ toYaml .Values.magento.lifecycle | nindent 12 }}
+          startupProbe: {{ toYaml .Values.magento.startupProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.magento.readinessProbe | nindent 12 }}
+          livenessProbe: {{ toYaml .Values.magento.livenessProbe | nindent 12 }}
+          stdin: true
+          tty: true
+          volumeMounts:
+            {{ toYaml .Values.magento.volumeMounts | nindent 12 }}
+          ports:
+            - containerPort: 80
+              name: http
+      dnsPolicy: ClusterFirst
+      tolerations: {{ toYaml .Values.xdebug.tolerations | nindent 8 }}
+      hostAliases:
+        {{- range .Values.magento.hostsEntry }}
+      - hostnames:
+        - {{ .hostname }}
+        ip: {{ .ipAddress }}
+        {{- end }}
+      {{- include "magento.imagePullSecrets" . | nindent 6 }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.magento.terminationGracePeriodSeconds | default "30" }}
+      {{- if .Values.magento.extraInitContainer }}
+      initContainers: {{ toYaml .Values.magento.extraInitContainer | nindent 6 }}
+      {{- end }}
+{{- end -}}

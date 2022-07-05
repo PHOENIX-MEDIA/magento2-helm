@@ -1,0 +1,78 @@
+{{- if .Values.cronjob.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.cronjob.name }}
+  labels:
+    helm.sh/chart: {{ include "magento.chart" . }}
+    app.kubernetes.io/name: {{ .Values.cronjob.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  progressDeadlineSeconds: 1200
+  replicas: {{ .Values.cronjob.replicas }}
+  revisionHistoryLimit: 10
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.cronjob.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+{{ toYaml .Values.cronjob.strategy | indent 4 }}
+  template:
+    metadata:
+      {{- with .Values.cronjob.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ .Values.cronjob.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      affinity: {{ toYaml .Values.cronjob.affinity | nindent 8 }}
+      securityContext: {{- toYaml .Values.cronjob.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: magento-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "magento.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.cronjob.extraVolumes }}
+        {{ toYaml .Values.cronjob.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        - image: {{ template "magento.image" . }}
+          command: [{{ required "Cronjob command required to rewrite the entrypoint." .Values.cronjob.command }}]
+          env: {{ toYaml .Values.cronjob.env | nindent 10 }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          name: {{ .Values.cronjob.name }}
+          resources: {{ toYaml .Values.cronjob.resources | nindent 12 }}
+          securityContext: {{ toYaml .Values.cronjob.securityContext | nindent 12 }}
+          lifecycle: {{ toYaml .Values.cronjob.lifecycle | nindent 12 }}
+          startupProbe: {{ toYaml .Values.cronjob.startupProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.cronjob.readinessProbe | nindent 12 }}
+          livenessProbe: {{ toYaml .Values.cronjob.livenessProbe | nindent 12 }}
+          stdin: true
+          tty: true
+          volumeMounts:
+            {{ toYaml .Values.cronjob.volumeMounts | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      tolerations: {{ toYaml .Values.cronjob.tolerations | nindent 8 }}
+      hostAliases:
+        {{- range .Values.cronjob.hostsEntry }}
+      - hostnames:
+        - {{ .hostname }}
+        ip: {{ .ipAddress }}
+        {{- end }}
+      {{- include "magento.imagePullSecrets" . | nindent 6 }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.cronjob.terminationGracePeriodSeconds | default "60" }}
+      {{- if .Values.cronjob.extraInitContainer }}
+      initContainers: {{ toYaml .Values.cronjob.extraInitContainer | nindent 6 }}
+      {{- end }}
+{{- end -}}

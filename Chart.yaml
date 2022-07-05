@@ -1,0 +1,37 @@
+name: magento
+apiVersion: v2
+appVersion: 2.4.4
+version: 2.4.0
+description: Magento chart to deploy the application including services.
+type: application
+keywords:
+- magento
+- ecommerce
+- Phoenix
+maintainers:
+  - name: PHOENIX MEDIA GmbH
+    email: hostmaster@phoenix-media.eu
+    url: https://www.phoenix-media.eu
+home: https://github.com/PHOENIX-MEDIA/magento2-helm
+icon: https://github.com/magento/magento2/blob/2.4-develop/lib/web/images/logo.svg
+dependencies:
+  - name: mariadb
+    repository: https://charts.bitnami.com/bitnami
+    version: ~11.0.0
+    condition: mariadb.enabled
+  - name: redis
+    repository: https://charts.bitnami.com/bitnami
+    version: ~16.12.0
+    condition: redis.enabled
+  - name: elasticsearch
+    repository: https://helm.elastic.co
+    version: ~7.15.0
+    condition: elasticsearch.enabled
+  - name: varnish
+    repository: https://charts.softonic.io
+    version: 0.9.0
+    condition: varnish.enabled
+  - name: rabbitmq
+    repository: https://charts.bitnami.com/bitnami
+    version: ~10.1.0
+    condition: rabbitmq.enabled

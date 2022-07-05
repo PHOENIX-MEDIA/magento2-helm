@@ -1,0 +1,72 @@
+{{- if .Values.magento.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "magento.name" . }}
+  labels:
+    {{- include "magento.labels" . | nindent 4 }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.magento.replicas }}
+  revisionHistoryLimit: 10
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      {{- include "magento.selectorLabels" . | nindent 6 }}
+  strategy:
+{{ toYaml .Values.magento.strategy | indent 4 }}
+  template:
+    metadata:
+      {{- with .Values.magento.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "magento.selectorLabels" . | nindent 8 }}
+    spec:
+      affinity: {{ toYaml .Values.magento.affinity | nindent 8 }}
+      securityContext: {{- toYaml .Values.magento.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: magento-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "magento.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.magento.extraVolumes }}
+        {{ toYaml .Values.magento.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        - image: {{ template "magento.image" . }}
+          env: {{ toYaml .Values.magento.env | nindent 10 }}
+          imagePullPolicy:  {{ .Values.image.pullPolicy | quote }}
+          name: {{ include "magento.name" . }}
+          resources: {{ toYaml .Values.magento.resources | nindent 12 }}
+          securityContext: {{ toYaml .Values.magento.securityContext | nindent 12 }}
+          lifecycle: {{ toYaml .Values.magento.lifecycle | nindent 12 }}
+          startupProbe: {{ toYaml .Values.magento.startupProbe | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.magento.readinessProbe | nindent 12 }}
+          livenessProbe: {{ toYaml .Values.magento.livenessProbe | nindent 12 }}
+          stdin: true
+          tty: true
+          volumeMounts:
+            {{ toYaml .Values.magento.volumeMounts | nindent 12 }}
+          ports:
+            - containerPort: 80
+              name: http
+      dnsPolicy: ClusterFirst
+      tolerations: {{ toYaml .Values.magento.tolerations | nindent 8 }}
+      hostAliases:
+        {{- range .Values.magento.hostsEntry }}
+      - hostnames:
+        - {{ .hostname }}
+        ip: {{ .ipAddress }}
+        {{- end }}
+      {{- include "magento.imagePullSecrets" . | nindent 6 }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.magento.terminationGracePeriodSeconds | default "30" }}
+      {{- if .Values.magento.extraInitContainer }}
+      initContainers: {{ toYaml .Values.magento.extraInitContainer | nindent 6 }}
+      {{- end }}
+{{- end -}}

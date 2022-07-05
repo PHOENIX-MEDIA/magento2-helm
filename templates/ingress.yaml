@@ -1,0 +1,49 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "magento.fullname" . }}
+  labels: {{ include "magento.labels" . | nindent 4 }}
+  {{- if or .Values.ingress.annotations .Values.ingress.certManager .Values.ingress.useProxyProtocol }}
+  annotations:
+    {{- if or .Values.ingress.annotations.letsencrypt .Values.ingress.certManager }}
+    cert-manager.io/cluster-issuer: letsencrypt
+    {{- end }}
+    {{- if .Values.ingress.useProxyProtocol }}
+    use-proxy-protocol: "true"
+    {{- end }}
+    {{- if .Values.ingress.annotations.extraRaw }}
+    {{ .Values.ingress.annotations.extraRaw | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  rules:
+  {{- range .Values.ingress.hosts }}
+  - host: {{ .name | quote }}
+    http:
+      paths:
+        {{- range .paths }}
+        - path: {{ .path | default "/" | quote }}
+          pathType: {{ .pathType | default "Prefix" | quote }}
+          backend:
+            service:
+              name: {{ .serviceName }}
+              port:
+                number: {{ .servicePort | default "80" }}
+        {{- end }}
+  {{- end }}
+  tls:
+  {{- range .Values.ingress.hosts }}
+  {{- if .tls }}
+  - hosts:
+  {{- if .tlsHosts }}
+  {{- range $host := .tlsHosts }}
+    - {{ $host }}
+  {{- end }}
+  {{- else }}
+    - {{ .name }}
+  {{- end }}
+    secretName: {{ .tlsSecret }}
+  {{- end }}
+  {{- end }}
+{{- end }}

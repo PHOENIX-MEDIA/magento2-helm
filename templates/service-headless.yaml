@@ -1,0 +1,18 @@
+{{- if .Values.serviceHeadless.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "magento.fullname" . }}-headless
+  labels: {{- include "magento.labels" . | nindent 4 }}
+  {{- if .Values.serviceHeadless.annotations }}
+  annotations: {{ toYaml .Values.serviceHeadless.annotations . | nindent 4 }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector: {{- include "magento.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.serviceHeadless.port }}
+      targetPort: http
+{{- end -}}

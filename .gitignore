@@ -1,0 +1,5 @@
+.DS_Store
+/.idea/
+*charts/
+*Chart.lock
+*deploy.yaml
