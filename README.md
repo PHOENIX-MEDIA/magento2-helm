@@ -54,6 +54,27 @@ If you prefer to skip Varnish for certain routes simply configure addtional path
 In case you want to protect the Magento backend by IP or BasicAuth we recommend to duplicate the `templates/ingress.yaml`
 (e.g. to your Helm project root) and configure a second Ingress with proper annotations.
 
+## Persistence
+
+For the media and var folder Magento usually requires an NFS share. Depending on the Kubernetes environment files shares
+are available by referencing the correct storageClass.
+
+In the `values.yaml` the `persistence` section and adjust it:
+
+```
+persistence:
+  enabled: true
+  name: magento-data
+  #existingClaim:
+  accessMode: ReadWriteMany
+  size: 10Gi
+  storageClassName: "files"
+```
+
+Existing [PVCs](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) can be also referenced
+by using `existingClaim`.
+
+
 ## SMTP server
 supervisord starts a simple Postfix MTA included in the [Alpine base image](https://github.com/PHOENIX-MEDIA/docker-nginx-php).
 However, you should configure a mail relay which accepts mails for your Magento instance and is eligible to send emails for

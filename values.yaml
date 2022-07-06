@@ -660,7 +660,7 @@ ingress:
   ## Set to true to enable ingress record generation
   enabled: false
   certManager: false
-  useProxyProtocol: false
+  useProxyProtocol: true
   annotations: {}
     #  annotations:
     #    extraRaw: |-
