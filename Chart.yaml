@@ -10,7 +10,6 @@ keywords:
 - Phoenix
 maintainers:
   - name: PHOENIX MEDIA GmbH
-    email: hostmaster@phoenix-media.eu
     url: https://www.phoenix-media.eu
 home: https://github.com/PHOENIX-MEDIA/magento2-helm
 icon: https://github.com/magento/magento2/blob/2.4-develop/lib/web/images/logo.svg
