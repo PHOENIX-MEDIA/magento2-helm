@@ -1,7 +1,7 @@
 - name: Run chart-releaser
   uses: helm/chart-releaser-action@v1.4.0
   with:
-    charts_dir: .
+    charts_dir: charts
     config: cr.yaml
     charts_repo_url: xxxxxx
   env:
