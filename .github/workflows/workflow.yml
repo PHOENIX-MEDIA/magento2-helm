@@ -1,0 +1,8 @@
+- name: Run chart-releaser
+  uses: helm/chart-releaser-action@v1.4.0
+  with:
+    charts_dir: .
+    config: cr.yaml
+    charts_repo_url: xxxxxx
+  env:
+    CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
