@@ -1,0 +1,48 @@
+magento:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: eyJodHRwOlwvXC9tYWdlbnRvLmxvY2FsXC8iOnsidHlwZSI6InVwc3RyZWFtIiwib3JpZ2luYWxfdXJsIjoiaHR0cDpcL1wve2RlZmF1bHR9XC8ifX0=
+    - name: MAGENTO_CLOUD_RELATIONSHIPS
+      value: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+    - name: MAGENTO_CLOUD_VARIABLES
+      value: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
+    - name: RELAYHOST
+      value: my.relayhost.com
+    - name: SMTP_USE_TLS
+      value: "false"
+
+cronjob:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: eyJodHRwOlwvXC9tYWdlbnRvLmxvY2FsXC8iOnsidHlwZSI6InVwc3RyZWFtIiwib3JpZ2luYWxfdXJsIjoiaHR0cDpcL1wve2RlZmF1bHR9XC8ifX0=
+    - name: MAGENTO_CLOUD_RELATIONSHIPS
+      value: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+    - name: MAGENTO_CLOUD_VARIABLES
+      value: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
+    - name: RELAYHOST
+      value: my.relayhost.com
+    - name: SMTP_USE_TLS
+      value: "false"
+
+elasticsearch:
+  esJavaOpts: "-Xmx256m -Xms256m"
+  resources:
+    limits:
+      cpu: "4000m"
+      memory: "4Gi"
+  persistence:
+    enabled: false
+
+persistence:
+  storageClassName: "hostpath"
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - name: magento.local
+      paths:
+      - path: "/"
+        serviceName: varnish
+        servicePort: 80
+

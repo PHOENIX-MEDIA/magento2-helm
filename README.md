@@ -167,8 +167,9 @@ To deploy Magento to different environments (develop, staging, production) it is
 for each environment and tune the resource limits and configuration values of the services.
 
 ## Changelog
-### [2.4.1] - not release yet
+### [2.4.1] - 2022-07-21
 - Added optional ingressClassName
+- Added values_docker.yaml for Docker Desktop deployments
 - small adjustments in values.yaml
 
 ### [2.4.0] - 2022-06-24
