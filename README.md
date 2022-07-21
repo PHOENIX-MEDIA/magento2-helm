@@ -167,6 +167,10 @@ To deploy Magento to different environments (develop, staging, production) it is
 for each environment and tune the resource limits and configuration values of the services.
 
 ## Changelog
+### [2.4.1] - not release yet
+- Added optional ingressClassName
+- small adjustments in values.yaml
+
 ### [2.4.0] - 2022-06-24
 - Use PHOENIX MEDIA's Magento OpenSource 2.4.4 build as base image
 - Updated Bitnami charts
