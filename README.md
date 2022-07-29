@@ -166,6 +166,85 @@ optional `--wait --timeout 15m` parameters in a deployment pipeline to see if th
 To deploy Magento to different environments (develop, staging, production) it is recommended to create a `values_*.yaml`
 for each environment and tune the resource limits and configuration values of the services.
 
+## Docker Desktop Example
+The file `values_docker.yaml` will override values inside `values.yaml`. It contains all of the necessary values that would need to change to run the Helm chart in the [Docker Desktop](https://www.docker.com/products/docker-desktop) K8S environment.
+The following steps will give a guide on how to achieve that:
+
+### Prerequisites
+- Install *Docker Desktop >= 4.10* locally (Tested with 4.10.1) and enable Kubernetes in the settings to start the cluster.
+It is also recommended to increase the available resources of Docker Desktop to 4 CPU cores and 8 GB of RAM to ensure a smooth operation. 
+Alternatively you may install *kubectl* separately, however that may be a more error-prone approach.
+- Clone this repository locally on your computer.
+
+### Step 1
+Verify the kubectl context as shown [here](https://docs.docker.com/desktop/kubernetes/#use-the-kubectl-command) or alternatively generate a `kube-config` file which will be used for the Helm deployment. Make sure to generate it in the same folder as the git repo. Quickest way to do so is:
+
+```
+kubectl config view --raw > <name-of-your-file>
+```
+
+### Step 2
+Set up an environment for Helm. It is recomended to use a Docker container to avoid dependency issues:
+
+```
+docker run -ti --entrypoint= -v $(pwd):/apps alpine/helm:latest sh
+```
+
+When using the native Helm installation bear in mind that the Helm version needs to >= 3.9
+
+### Step 3
+Pull the chart dependencies and deploy the Helm chart.
+
+```
+helm dependency update #pulls all the other charts that our chart uses
+helm upgrade -i --kubeconfig <name-of-your-kubeconfig-flie> -f values_docker.yaml --create-namespace -n <your-namespace> magento .
+```
+
+### Step 3.5
+Check the progress of the Helm deployment in Kubernetes (*not in your docker container*)
+
+```
+kubectl get pods -n <your-namespace> -w
+```
+
+### Step 4
+After the deployment has fully finished an Ingress-NGINX instance is needed to access Magento store through the browser. Since Docker Desktop ships without a Kubernetes Ingress, [see here](https://kubernetes.io/docs/concepts/services-networking/ingress/), use the following Helm command to deploy it:
+
+```
+helm upgrade --kubeconfig kube-config --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace
+```
+
+The command above deploys an Ingress-NGINX pod that has access to the `/etc/hosts` file. Make sure to add a mapping for the predefined  Magento domain, *magento.local*, in this file to ensure the domain points to the local K8S cluster. Ingress will then forward the traffic to the Magento instance.
+
+```
+echo "127.0.0.1 magento.local" >> /etc/hosts
+```
+
+### Step 5
+Navigate to `http://magento.local` in your browser and play around with your local Magento installation!
+
+#### Disclaimer
+This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. If you wish to use a different domain,
+then you would need to update a few lines on the said file: 
+
+```
+magento:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+cronjob:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+ingress:
+  hosts:
+    - name: <your-domain>
+```
+
+Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
+
 ## Changelog
 ### [2.4.1] - 2022-07-21
 - Added optional ingressClassName
