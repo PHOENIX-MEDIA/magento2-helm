@@ -246,6 +246,9 @@ ingress:
 Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
 
 ## Changelog
+### [2.4.2] - 2022-08-11
+- Use PHOENIX MEDIA's Magento OpenSource 2.4.5 build as base image
+- 
 ### [2.4.1] - 2022-07-21
 - Added optional ingressClassName
 - Added values_docker.yaml for Docker Desktop deployments
