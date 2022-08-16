@@ -1,7 +1,9 @@
+{{- if .Values.managedCert.enabled -}}
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
   name: managed-cert
 spec:
   domains:
-    - magento.phoenix-media.rocks
+    - {{ .Values.managedCert.domain }}
+{{- end -}}

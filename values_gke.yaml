@@ -157,8 +157,8 @@ varnish:
           set req.backend_hint = magento_director.backend("magento-headless");
 
           # health check
-          if (req.url ~ "^/varnish-health-check.html") {
-              return (synth(200, "Node alive"));
+          if (req.http.User-Agent ~ "GoogleHC" || req.url ~ "^/varnish-health-check.html") {
+            return (synth(200, "Node alive"));
           }
 
           # We only deal with GET and HEAD by default
@@ -226,11 +226,6 @@ varnish:
           # Bypass authenticated GraphQL requests without a X-Magento-Cache-Id
           if (req.url ~ "/graphql" && !req.http.X-Magento-Cache-Id && req.http.Authorization ~ "^Bearer") {
               return (pass);
-          }
-          
-          # health check
-          if (req.http.User-Agent ~ "GoogleHC" || req.url ~ "^/varnish-health-check.html") {
-            return (synth(200, "Node alive"));
           }
 
           return (hash);
@@ -378,13 +373,18 @@ varnish:
           }
       }
 
+# Uncomment and edit section if you want to generate ssl certificate for your domain
+managedCert:
+  enabled: false
+#  domains:
+#    - <your-domain>
+
 ingress:
   enabled: true
-#  certManager: true
-#  ingressClassName: nginx
   hosts:
-    - name: magento.phoenix-media.rocks
-      paths:
-      - path: "/"
-        serviceName: varnish
-        servicePort: 8080
+# Uncomment this section and update with your values
+#    - name: <your-domain>
+#      paths:
+#      - path: "/"
+#        serviceName: varnish
+#        servicePort: 8080
