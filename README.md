@@ -343,14 +343,6 @@ gcloud compute addresses create <adress-name> --global
 ```
 
 ### Step 6
-*OPTIONAL* Update the *managed-cert.yaml* file with your available domain in order to generate a ssl certificate for https and deploy it with kubectl
-
-```
-kubectl apply -f managed-cert.yaml -n gkedemo
-
-```
-
-### Step 7
 Pull the chart dependencies and deploy the Helm chart.
 
 ```
@@ -358,29 +350,11 @@ helm dependency update #pulls all the other charts that our chart uses
 helm upgrade -i -f values_gke.yaml --create-namespace -n <your-namespace> magento .
 ```
 
-### Step 8
+### Step 7
 Wait until all the deployments are done and make sure that there is a dns ressource resolving the domain name to the ingress ip. Afterwards navigate to `http://<your-domain>` and enjoy
 
 #### Disclaimer
-This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file: 
-
-```
-magento:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-cronjob:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-ingress:
-  hosts:
-    - name: <your-domain>
-```
-
-Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
+This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
 
 ## Changelog
 ### [2.4.3] - 2022-08-18
