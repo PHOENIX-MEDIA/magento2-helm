@@ -343,7 +343,7 @@ gcloud compute addresses create <adress-name> --global
 ```
 
 ### Step 6
-*OPTIONAl* Update the *managed-cert.yaml* file with your available domain in order to generate a ssl certificate for https and deploy it with kubectl
+*OPTIONAL* Update the *managed-cert.yaml* file with your available domain in order to generate a ssl certificate for https and deploy it with kubectl
 
 ```
 kubectl apply -f managed-cert.yaml -n gkedemo
