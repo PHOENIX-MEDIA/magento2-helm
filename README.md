@@ -23,7 +23,7 @@ of custom scripts and also gives great flexibility to adjust process as needed.
 It is recommended to get familiar with its [build and deploy mechanisms](https://devdocs.magento.com/cloud/project/magento-env-yaml.html).
 
 It is required to review and adjust the [Magento Cloud environment variables](https://devdocs.magento.com/cloud/env/variables-cloud.html)
-for the `magento` and `cronjob` deployment in the `values.yaml:
+for the `magento` and `cronjob` deployment in the `values.yaml`:
 - MAGENTO_CLOUD_ROUTES
 - MAGENTO_CLOUD_RELATIONSHIPS
 - MAGENTO_CLOUD_VARIABLES
@@ -33,13 +33,34 @@ Their values are simply base64 encoded JSON objects. To decode them either run `
 
 > **_Note:_** It is best practice to maintain sensitive values in a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) instead of keeping them in the `values.yaml`.
 
+### Updating domains MAGENTO_CLOUD_* variables and values files
+The values*.yaml files contain domain specific configurations. You will need to update a few lines the environment
+variables of the magento, cronjob and xdebug (optional) workloads as well as in the ingress section:
+
+```
+magento:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+cronjob:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+ingress:
+  hosts:
+    - name: <your-domain>
+```
+
+
 ## Ingress
 
 Before enabling the ingress make sure to configure `host.name` and the TLS certificate properly. When having
 [cert-manager](https://cert-manager.io/docs/) installed set `ingress.certManager: true` to automatically generate a
 certificate for the application.
 
-If you prefer to skip Varnish for certain routes simply configure addtional paths:
+If you prefer to skip Varnish for certain routes simply configure additional paths:
 
 ```
     paths:
@@ -137,7 +158,7 @@ you have to adjust the Varnish VCL prepared in the `values.yaml`:
 For any request from the whitelisted networks which has the XDEBUG_SESSION request cookie (we use [Xdebug Chrome Extension](https://chrome.google.com/webstore/detail/xdebug-chrome-extension/oiofkammbajfehgpleginfomeppgnglk))
 the request will be sent to the `xdebug` pod instead of the normal `magento` pods.
 
-In addition the settings for the `xdebug` workload have to be adjusted in the `values.yaml`:
+In addition, the settings for the `xdebug` workload have to be adjusted in the `values.yaml`:
 
 ```
 xdebug:
@@ -166,28 +187,7 @@ optional `--wait --timeout 15m` parameters in a deployment pipeline to see if th
 To deploy Magento to different environments (develop, staging, production) it is recommended to create a `values_*.yaml`
 for each environment and tune the resource limits and configuration values of the services.
 
-## Updating values files
-The following values_*.yaml files contain domain specific configurations. You will need to update a few lines on the said files such as
-
-```
-magento:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-cronjob:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-ingress:
-  hosts:
-    - name: <your-domain>
-```
-
-Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
-
-## Docker Desktop Example
+## Docker Desktop example
 The file `values_docker.yaml` will override values inside `values.yaml`. It contains all of the necessary values that would need to change to run the Helm chart in the [Docker Desktop](https://www.docker.com/products/docker-desktop) K8S environment.
 The following steps will give a guide on how to achieve that:
 
@@ -205,7 +205,7 @@ kubectl config view --raw > <name-of-your-file>
 ```
 
 ### Step 2
-Set up an environment for Helm. It is recomended to use a Docker container to avoid dependency issues:
+Set up an environment for Helm. It is recommended to use a Docker container to avoid dependency issues:
 
 ```
 docker run -ti --entrypoint= -v $(pwd):/apps alpine/helm:latest sh
@@ -247,26 +247,26 @@ Navigate to `http://magento.local` in your browser and play around with your loc
 #### Disclaimer
 This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
 
-## GKE Example
-The file `values_gke.yaml` will override values inside `values.yaml`. It contains all of the necessary values that would need to change to run the Helm chart in a GKE K8S environment.
-The following steps will give a guide on how to achieve that:
+
+## GKE example
+The file `values_gke.yaml` will override values inside `values.yaml`. It contains all necessary values to deploy the Helm chart in a GKE K8S environment.
 
 ### Prerequisites
-- Create a google account (if you do not already have one) and start a free trial on [GKE](https://cloud.google.com/kubernetes-engine). It is recommended to use the inbuilt terminal, since it will include all the necessary dependencies like Helm, kubectl, gcloud and so on. 
-- Clone this repository in the machine you decided to use
+- Create a Google account. You can start a free trial at [GKE](https://cloud.google.com/kubernetes-engine). It is recommended to use the built-in terminal since it will include all the necessary dependencies like Helm, kubectl and gcloud. 
+- Clone this repository to the machine you decided to use.
 
 ### Step 1
-Create a new project and make sure it is connected to your billing account [as seen here](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+Create a new project and make sure it is connected to your billing account [as described here](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
 
 ### Step 2
-Switch the gcloud context to the newly created project
+Switch the gcloud context to the newly created project:
 
 ```
 gcloud config set project <project-id>
 ```
 
 ### Step 3
-Enable all necessary api services
+Enable all necessary API services:
 
 ```
 gcloud services enable container.googleapis.com
@@ -274,37 +274,42 @@ gcloud services enable file.googleapis.com
 ```
 
 ### Step 4
-Create new cluster
+Create new a Kubernetes cluster:
 
 ```
 gcloud container clusters create <cluster-name> --zone=asia-east1-a --addons=HttpLoadBalancing,GcePersistentDiskCsiDriver,GcpFilestoreCsiDriver --image-type=UBUNTU_CONTAINERD --machine-type=e2-standard-2
 ```
 
 ### Step 5
-Create static IP for ingress (Optional, since ingress IP will not change unless you redeploy it) and update the *values_gke.yaml* file
+Create a static IP for the Ingress domain (optional, since an Ingress IP will not change unless you redeploy it) and update the *values_gke.yaml* file:
 
 ```
 gcloud compute addresses create <adress-name> --global
 ```
 
 ### Step 6
-Pull the chart dependencies and deploy the Helm chart.
+Pull the chart dependencies and deploy the Helm chart:
 
 ```
-helm dependency update #pulls all the other charts that our chart uses
+helm dependency update
 helm upgrade -i -f values_gke.yaml --create-namespace -n <your-namespace> magento .
 ```
 
 ### Step 7
-Wait until all the deployments are done and make sure that there is a dns ressource resolving the domain name to the ingress ip. Afterwards navigate to `http://<your-domain>` and enjoy
+Wait until all the workloads reached ready state and ensure the DNS resolves the configured domain name to the Ingress IP.
+Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 
 #### Disclaimer
-This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
+This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files).
 
 ## Changelog
+### [2.4.3] - 2022-08-18
+- Added template for GKE managed certificates
+- Enhanced README by GKE deployment guide
+
 ### [2.4.2] - 2022-08-11
 - Use PHOENIX MEDIA's Magento OpenSource 2.4.5 build as base image
-- 
+
 ### [2.4.1] - 2022-07-21
 - Added optional ingressClassName
 - Added values_docker.yaml for Docker Desktop deployments
