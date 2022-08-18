@@ -245,7 +245,7 @@ echo "127.0.0.1 magento.local" >> /etc/hosts
 Navigate to `http://magento.local` in your browser and play around with your local Magento installation!
 
 #### Disclaimer
-This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
+This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files)
 
 
 ## GKE example
@@ -354,7 +354,7 @@ helm upgrade -i -f values_gke.yaml --create-namespace -n <your-namespace> magent
 Wait until all the deployments are done and make sure that there is a dns ressource resolving the domain name to the ingress ip. Afterwards navigate to `http://<your-domain>` and enjoy
 
 #### Disclaimer
-This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
+This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files)
 
 ## Changelog
 ### [2.4.3] - 2022-08-18

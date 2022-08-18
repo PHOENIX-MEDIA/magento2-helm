@@ -5,5 +5,5 @@ metadata:
   name: managed-cert
 spec:
   domains:
-    - {{ .Values.managedCert.domain }}
+    {{ toYaml .Values.managedCert.domains }}
 {{- end -}}
