@@ -166,6 +166,27 @@ optional `--wait --timeout 15m` parameters in a deployment pipeline to see if th
 To deploy Magento to different environments (develop, staging, production) it is recommended to create a `values_*.yaml`
 for each environment and tune the resource limits and configuration values of the services.
 
+## Updating values files
+The following values_*.yaml files contain domain specific configurations. You will need to update a few lines on the said files such as
+
+```
+magento:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+cronjob:
+  env:
+    - name: MAGENTO_CLOUD_ROUTES
+      value: <base64-encoded-string-containing-your-domain>
+
+ingress:
+  hosts:
+    - name: <your-domain>
+```
+
+Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
+
 ## Docker Desktop Example
 The file `values_docker.yaml` will override values inside `values.yaml`. It contains all of the necessary values that would need to change to run the Helm chart in the [Docker Desktop](https://www.docker.com/products/docker-desktop) K8S environment.
 The following steps will give a guide on how to achieve that:
@@ -224,26 +245,61 @@ echo "127.0.0.1 magento.local" >> /etc/hosts
 Navigate to `http://magento.local` in your browser and play around with your local Magento installation!
 
 #### Disclaimer
-This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. If you wish to use a different domain,
-then you would need to update a few lines on the said file: 
+This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
+
+## GKE Example
+The file `values_gke.yaml` will override values inside `values.yaml`. It contains all of the necessary values that would need to change to run the Helm chart in a GKE K8S environment.
+The following steps will give a guide on how to achieve that:
+
+### Prerequisites
+- Create a google account (if you do not already have one) and start a free trial on [GKE](https://cloud.google.com/kubernetes-engine). It is recommended to use the inbuilt terminal, since it will include all the necessary dependencies like Helm, kubectl, gcloud and so on. 
+- Clone this repository in the machine you decided to use
+
+### Step 1
+Create a new project and make sure it is connected to your billing account [as seen here](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+
+### Step 2
+Switch the gcloud context to the newly created project
 
 ```
-magento:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-cronjob:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-ingress:
-  hosts:
-    - name: <your-domain>
+gcloud config set project <project-id>
 ```
 
-Check out [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#magento-ece-tools) for the string encoding.
+### Step 3
+Enable all necessary api services
+
+```
+gcloud services enable container.googleapis.com
+gcloud services enable file.googleapis.com
+```
+
+### Step 4
+Create new cluster
+
+```
+gcloud container clusters create <cluster-name> --zone=asia-east1-a --addons=HttpLoadBalancing,GcePersistentDiskCsiDriver,GcpFilestoreCsiDriver --image-type=UBUNTU_CONTAINERD --machine-type=e2-standard-2
+```
+
+### Step 5
+Create static IP for ingress (Optional, since ingress IP will not change unless you redeploy it) and update the *values_gke.yaml* file
+
+```
+gcloud compute addresses create <adress-name> --global
+```
+
+### Step 6
+Pull the chart dependencies and deploy the Helm chart.
+
+```
+helm dependency update #pulls all the other charts that our chart uses
+helm upgrade -i -f values_gke.yaml --create-namespace -n <your-namespace> magento .
+```
+
+### Step 7
+Wait until all the deployments are done and make sure that there is a dns ressource resolving the domain name to the ingress ip. Afterwards navigate to `http://<your-domain>` and enjoy
+
+#### Disclaimer
+This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
 
 ## Changelog
 ### [2.4.2] - 2022-08-11
