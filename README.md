@@ -245,8 +245,7 @@ echo "127.0.0.1 magento.local" >> /etc/hosts
 Navigate to `http://magento.local` in your browser and play around with your local Magento installation!
 
 #### Disclaimer
-This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files)
-
+This guide and the `values_docker.yaml` file are configured for the *magento.local* domain. You will need to update a few lines on the said file as shown in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files)
 
 ## GKE example
 The file `values_gke.yaml` will override values inside `values.yaml`. It contains all necessary values to deploy the Helm chart in a GKE K8S environment.
@@ -300,7 +299,7 @@ Wait until all the workloads reached ready state and ensure the DNS resolves the
 Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 
 #### Disclaimer
-This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-values-files).
+This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
 ### [2.4.3] - 2022-08-18
