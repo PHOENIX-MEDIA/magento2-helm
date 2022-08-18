@@ -304,8 +304,9 @@ This guide and the `values_gke.yaml` file are configured for the *magento.phoeni
 
 ## Changelog
 ### [2.4.3] - 2022-08-18
+- Added values_gke.yaml file for GKE deployments
 - Added template for GKE managed certificates
-- Enhanced README by GKE deployment guide
+- Added GKE deployment guide to readme
 
 ### [2.4.2] - 2022-08-11
 - Use PHOENIX MEDIA's Magento OpenSource 2.4.5 build as base image
