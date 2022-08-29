@@ -701,3 +701,6 @@ ingress:
 #    - magento.local
 
 #    tlsSecret: site-cert
+
+managedCert:
+  enabled: false
