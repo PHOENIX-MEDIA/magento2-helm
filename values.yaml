@@ -620,6 +620,9 @@ rabbitmq:
   nameOverride: rabbitmq
   clustering:
     enabled: false
+  auth:
+    username: phoenix
+    password: "Magento123"
 
 persistence:
   enabled: true
