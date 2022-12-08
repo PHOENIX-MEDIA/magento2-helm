@@ -311,6 +311,8 @@ varnish:
     - http_resp_hdr_len=65536
     - -p
     - http_resp_size=98304
+    - -p
+    - workspace_backend=131072
 
   vcl:
     default.vcl: |-
