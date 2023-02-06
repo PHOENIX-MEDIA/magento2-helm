@@ -1,7 +1,7 @@
 name: magento
 apiVersion: v2
 appVersion: 2.4.5
-version: 2.4.3
+version: 2.4.4
 description: Magento chart to deploy the application including services.
 type: application
 keywords:
@@ -24,7 +24,7 @@ dependencies:
     condition: redis.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
-    version: ~7.15.0
+    version: ~7.17.0
     condition: elasticsearch.enabled
   - name: varnish
     repository: https://charts.softonic.io
