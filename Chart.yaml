@@ -1,7 +1,7 @@
 name: magento
 apiVersion: v2
 appVersion: 2.4.5
-version: 2.4.4
+version: 2.5.0
 description: Magento chart to deploy the application including services.
 type: application
 keywords:
@@ -20,17 +20,25 @@ dependencies:
     condition: mariadb.enabled
   - name: redis
     repository: https://charts.bitnami.com/bitnami
-    version: ~16.12.0
+    version: ~16.13.0
     condition: redis.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: ~7.17.0
     condition: elasticsearch.enabled
+  - name: opensearch
+    repository: https://opensearch-project.github.io/helm-charts/
+    version: ~1.18.0
+    condition: opensearch.enabled
   - name: varnish
     repository: https://charts.softonic.io
     version: 0.9.0
     condition: varnish.enabled
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
-    version: ~10.1.0
+    version: ~10.3.0
     condition: rabbitmq.enabled
+  - name: imgproxy
+    version: ~0.8.27
+    repository: https://helm.imgproxy.net/
+    condition: imgproxy.enabled
