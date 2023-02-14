@@ -185,8 +185,7 @@ When imgproxy get deployed (see `imgproxy.enabled: true`) and Varnish detects an
 instructions, it will forward the request to imgproxy and cache its' response on a disk cache. For details check the
 modified VCL in `values.yaml`.
 
-> **_Hint:_** Configured placeholder images are not automatically detected. Modify the VCL method _vcl_synth_ to deliver
-> the intended placeholder image.
+In case imgproxy can't serve the image the request will be gracefully forwarded to the magento pod.
 
 
 ## Helm deployment
@@ -318,7 +317,7 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
-### [2.5.0] - 2023-06-07
+### [2.5.0] - unreleased
 - Added Opensearch as alternative to Elasticsearch. Set `elasticsearch.enabled: false` and `opensearch.enabled: true` to 
   switch search engines.
 - Added imgproxy for dynamic image resizing. See imgproxy section for details.
