@@ -739,8 +739,6 @@ imgproxy:
   features:
     compression:
       jpegProgressive: true
-    clientHintsSupport:
-      enabled: true
     urlSignature:
       enabled: false
     server:
