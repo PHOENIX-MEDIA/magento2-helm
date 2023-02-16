@@ -335,13 +335,21 @@ varnish:
   varnishSize: 128M
   arguments:
     - -s
-    - images=file,/tmp/varnish-image-cache,128m
+    - images=file,/disk-cache/varnish-image-cache,128m
     - -p
     - http_resp_hdr_len=65536
     - -p
     - http_resp_size=98304
     - -p
     - workspace_backend=131072
+
+  extraVolumes:
+    - name: disk-cache
+      emptyDir: {}
+
+  extraVolumeMounts:
+    - name: disk-cache
+      mountPath: /disk-cache
 
   vcl:
     default.vcl: |-

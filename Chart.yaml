@@ -32,7 +32,7 @@ dependencies:
     condition: opensearch.enabled
   - name: varnish
     repository: https://charts.softonic.io
-    version: 0.13.0
+    version: 0.13.1
     condition: varnish.enabled
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
