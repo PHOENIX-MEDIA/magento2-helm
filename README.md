@@ -323,7 +323,7 @@ This guide and the `values_gke.yaml` file are configured for the *magento.phoeni
 - Added imgproxy for dynamic image resizing. See imgproxy section for details.
 
 
-### [2.4.4] - unreleased
+### [2.4.4] - 2023-02-20
 - Kubernetes 1.25 compatibility
 - Updated Elasticsearch chart to 7.17
 
