@@ -322,6 +322,7 @@ This guide and the `values_gke.yaml` file are configured for the *magento.phoeni
 - Added Opensearch as alternative to Elasticsearch. Set `elasticsearch.enabled: false` and `opensearch.enabled: true` to 
   switch search engines.
 - Added imgproxy for dynamic image resizing. See imgproxy section for details.
+- Add disk-cache volume for Varnish
 
 ### [2.4.4] - 2023-02-20
 - Kubernetes 1.25 compatibility
