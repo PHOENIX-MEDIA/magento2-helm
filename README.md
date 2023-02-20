@@ -302,7 +302,7 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
-### [2.4.4] - unreleased
+### [2.4.4] - 2023-02-20
 - Kubernetes 1.25 compatibility
 - Updated Elasticsearch chart to 7.17
 
