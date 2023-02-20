@@ -173,6 +173,22 @@ xdebug:
 
 > **_Caution:_** Running Xdebug in a public environment can be a security issue. Enable this functionality at your own risk.
 
+## imgproxy support
+[imgproxy](https://imgproxy.net/) instantly resizes images and delivers it in an optimal format. This offloads resources
+from the Magento pod and delivers images faster in PNG/WebP without additional effort.
+
+To enable imgproxy in your deployment set `imgproxy.enabled: true` in your values file. Varnish will detect media image request
+and will forward the request to imgproxy if available. The response will get cached response on a disk cache. For details check the
+modified VCL in `values.yaml`. The relevant sections can be found by search for `x-img` in the VCL.
+
+Resizing of product images happens on-the-fly once you enable the configuration in Magento the [URL format](https://experienceleague.adobe.com/docs/commerce-operations/configuration-guide/storage/remote-storage/remote-storage-image-resize.html?lang=en#configure-url-format-in-adobe-commerce).
+This will append formatting instructions for width and height to the original product image URL. In addition to the clients accept headers
+this information is used by imgproxy to deliver the image in the desired resolution.
+
+> In case imgproxy can't serve the image the request will be gracefully forwarded to the Magento pod, which serves the 
+configured placeholder image for requests to `media/catalog` and `media/wysiwyg`. The relevant VCL subrouting is `vcl_synth`.
+
+
 ## Helm deployment
 The chart requires [Helm 3.x](https://helm.sh/) and has been tested with 3.9.0.
 Make sure to adjust the `values.yaml` before deployment.
@@ -302,6 +318,13 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
+### [2.5.0] - 2023-02-20
+- Added Opensearch as alternative to Elasticsearch. Set `elasticsearch.enabled: false` and `opensearch.enabled: true` to 
+  switch search engines.
+- Added imgproxy for dynamic image resizing. See imgproxy section for details.
+- Add disk-cache volume for Varnish
+- Updated Helm charts and container images for Redis, Varnish and RabbitMQ to meet Adobe Commerce/Magento 2.4.5 System Requirements
+
 ### [2.4.4] - 2023-02-20
 - Kubernetes 1.25 compatibility
 - Updated Elasticsearch chart to 7.17

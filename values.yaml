@@ -177,7 +177,6 @@ cronjob:
       value: "false"
   podAnnotations: {}
   resources: {}
-  lifecycle: {}
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -296,6 +295,34 @@ elasticsearch:
   volumeClaimTemplate.resources.requests.storage: 10Gi
 
 
+opensearch:
+  enabled: false
+  image:
+    repository: magento/magento-cloud-docker-opensearch
+    tag: 1.2-1.3.4
+  replicas: 1
+  masterService: "elasticsearch"
+  opensearchJavaOpts: "-Xmx2g -Xms2g"
+  sysctlInit:
+    enabled: true
+  config:
+    opensearch.yml: |
+      cluster.name: opensearch-cluster
+      network.host: 0.0.0.0
+      plugins.security.disabled: true
+  extraEnvs:
+    - name: DISABLE_SECURITY_PLUGIN
+      value: "true"
+    - name: DISABLE_INSTALL_DEMO_CONFIG
+      value: "true"
+    - name: bootstrap.memory_lock
+      value: 'false'
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+
 varnish:
   enabled: true
   nameOverride: "varnish"
@@ -307,12 +334,22 @@ varnish:
   rolloutDeployment: false
   varnishSize: 128M
   arguments:
+    - -s
+    - images=file,/disk-cache/varnish-image-cache,128m
     - -p
     - http_resp_hdr_len=65536
     - -p
     - http_resp_size=98304
     - -p
     - workspace_backend=131072
+
+  extraVolumes:
+    - name: disk-cache
+      emptyDir: {}
+
+  extraVolumeMounts:
+    - name: disk-cache
+      mountPath: /disk-cache
 
   vcl:
     default.vcl: |-
@@ -332,6 +369,15 @@ varnish:
           .threshold = 3;
       }
 
+      probe imgproxy_probe {
+          .url = "/health";
+          .timeout = 5s;
+          .interval = 5s;
+          .initial = 3;
+          .window = 5;
+          .threshold = 3;
+      }
+      
       backend default {
           .host = "localhost";
           .port = "80";
@@ -359,6 +405,15 @@ varnish:
               between_bytes_timeout = 90s,
               ttl = 10s
           );
+          
+          new imgproxy_directory = dynamic.director(
+              port = "80",
+              share = HOST,
+              probe = imgproxy_probe,
+              first_byte_timeout = 5s,
+              between_bytes_timeout = 5s,
+              ttl = 10s
+          );
       }
 
       sub vcl_recv {
@@ -384,6 +439,8 @@ varnish:
               }
               return (synth(200, "Purged"));
           }
+      
+          set req.backend_hint = magento_director.backend("magento-headless");
 
           if (req.method != "GET" &&
               req.method != "HEAD" &&
@@ -396,13 +453,17 @@ varnish:
                 return (pipe);
           }
 
-          set req.backend_hint = magento_director.backend("magento-headless");
-
           # health check
           if (req.url ~ "^/varnish-health-check.html") {
               return (synth(200, "Node alive"));
           }
 
+          # use xdebug backend
+      #    if (req.http.cookie ~ "XDEBUG_SESSION=" && std.ip(req.http.X-Real-IP, "0.0.0.0") ~ xdebug-users) {
+      #        set req.backend_hint = magento_director.backend("xdebug");
+      #        return (pass);
+      #    }
+      
           # We only deal with GET and HEAD by default
           if (req.method != "GET" && req.method != "HEAD") {
               return (pass);
@@ -412,12 +473,6 @@ varnish:
           if (req.url ~ "/customer" || req.url ~ "/checkout") {
               return (pass);
           }
-    
-          # use xdebug backend
-      #    if (req.http.cookie ~ "XDEBUG_SESSION=" && std.ip(req.http.X-Real-IP, "0.0.0.0") ~ xdebug-users) {
-      #        set req.backend_hint = magento_director.backend("xdebug");
-      #        return (pass);
-      #    }
 
           # Bypass health check requests
           if (req.url ~ "^/(pub/)?(health_check.php)$") {
@@ -455,14 +510,37 @@ varnish:
           }
 
           # Static files caching
-          if (req.url ~ "^/(pub/)?(media|static)/") {
-              # Static files should not be cached by default
-              return (pass);
+          if (req.url ~ "^/(pub/)?(media|static|insecure)/") {
+              # image processing
+              if (req.url ~ "(?i)^/(pub/)?media/.*\.(jpe?g|png|gif|webp)(\?.*)?$" && req.restarts == 0 && std.healthy(imgproxy_directory.backend("imgproxy"))) {
+                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+                  set req.http.x-img-processing = "1";
+    
+                  set req.http.X-img-width = regsub(req.url, ".*width=([0-9]+)(.*)?", "\1");
+                  if (req.http.X-img-width !~ "^[0-9]{2,4}$") { set req.http.X-img-width = "2000"; }
+                  set req.http.X-img-height = regsub(req.url, ".*height=([0-9]+)(.*)?", "\1");
+                  if (req.http.X-img-height !~ "^[0-9]{2,4}$") { set req.http.X-img-height = "2000"; }
+                  set req.http.X-img-path =  regsub(req.url, "^(/media/[^?]+)(.*)?", "local://\1");
+                  std.log("img-width: " + req.http.X-img-width);
+                  std.log("img-height: " + req.http.X-img-height);
+                  std.log("img-path: " + req.http.X-img-path);
+    
+                  set req.url = "/insecure/rs:fit:" + req.http.X-img-width + ":" + req.http.X-img-height + "/plain/" + req.http.X-img-path;
+              }
+              else if (req.http.x-img-processing == "1") {
+                  # request might get restarted (see vcl_hit). make sure backend_hint is set.
+                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+              }
+              # Unless static content signing is deactivated it should be save to cache all static files 
+              # else {
+              #  # Static files should not be cached by default
+              #  return (pass);
+              #}
 
               # But if you use a few locales and don't use CDN you can enable caching static files by commenting previous line (#return (pass);) and uncommenting next 3 lines
-              #unset req.http.Https;
-              #unset req.http.X-Forwarded-Proto;
-              #unset req.http.Cookie;
+              unset req.http.Https;
+              unset req.http.X-Forwarded-Proto;
+              unset req.http.Cookie;
           }
 
           # Bypass authenticated GraphQL requests without a X-Magento-Cache-Id
@@ -474,22 +552,34 @@ varnish:
       }
 
       sub vcl_hash {
-          if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.cookie ~ "X-Magento-Vary=") {
-              hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
+          if (req.http.x-img-processing) {
+            if (req.http.accept ~ "image/webp") {
+              hash_data("webp=1");
+            }
+            else if (req.http.accept ~ "image/png") {
+              hash_data("png=1");
+            }
+          } else {
+            if (req.http.cookie ~ "X-Magento-Vary=") {
+                hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
+            }
           }
-
+      
           # For multi site configurations to not cache each other's content
           if (req.http.host) {
               hash_data(req.http.host);
           } else {
               hash_data(server.ip);
           }
+      
+          if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.cookie ~ "X-Magento-Vary=") {
+              hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
+          }
 
           # To make sure http users don't see ssl warning
           if (req.http.X-Forwarded-Proto) {
               hash_data(req.http.X-Forwarded-Proto);
           }
-
 
           if (req.url ~ "/graphql") {
               call process_graphql_headers;
@@ -531,12 +621,10 @@ varnish:
               set beresp.http.X-Magento-Cache-Control = beresp.http.Cache-Control;
           }
 
-          # cache only successfully responses and 404s
-          if (beresp.status != 200 && beresp.status != 404) {
-              set beresp.ttl = 0s;
-              set beresp.uncacheable = true;
-              return (deliver);
-          } elsif (beresp.http.Cache-Control ~ "private") {
+          # cache only successfully responses and 404s that are not marked as private
+          if (beresp.status != 200 &&
+                  beresp.status != 404 &&
+                  beresp.http.Cache-Control ~ "private") {
               set beresp.uncacheable = true;
               set beresp.ttl = 86400s;
               return (deliver);
@@ -546,23 +634,37 @@ varnish:
           if (beresp.ttl > 0s && (bereq.method == "GET" || bereq.method == "HEAD")) {
               unset beresp.http.set-cookie;
           }
+      
+          # image processing
+          if (bereq.http.x-img-processing == "1") {
+              set beresp.storage = storage.images;
+              if (beresp.status != 200 && beresp.status != 304) {
+                  std.log("imgproxy - an error occurred, start over with fallback");
+                  return (abandon);
+              }
+          } else if (bereq.http.x-img-processing == "2") {
+              # imgproxy returned an error, return a cacheable 404
+              set beresp.status = 404;
+              set beresp.http.Cache-Control = "max-age=600";
+              set beresp.ttl = 600s;
+          }
 
-         # If page is not cacheable then bypass varnish for 2 minutes as Hit-For-Pass
-         if (beresp.ttl <= 0s ||
-             beresp.http.Surrogate-control ~ "no-store" ||
-             (!beresp.http.Surrogate-Control &&
-             beresp.http.Cache-Control ~ "no-cache|no-store") ||
-             beresp.http.Vary == "*") {
+          # If page is not cacheable then bypass varnish for 2 minutes as Hit-For-Pass
+          if (beresp.ttl <= 0s ||
+              beresp.http.Surrogate-control ~ "no-store" ||
+              (!beresp.http.Surrogate-Control &&
+              beresp.http.Cache-Control ~ "no-cache|no-store") ||
+              beresp.http.Vary == "*") {
               # Mark as Hit-For-Pass for the next 2 minutes
               set beresp.ttl = 120s;
               set beresp.uncacheable = true;
-         }
+          }
 
-         # If the cache key in the Magento response doesn't match the one that was sent in the request, don't cache under the request's key
-         if (bereq.url ~ "/graphql" && bereq.http.X-Magento-Cache-Id && bereq.http.X-Magento-Cache-Id != beresp.http.X-Magento-Cache-Id) {
-            set beresp.ttl = 0s;
-            set beresp.uncacheable = true;
-         }
+          # If the cache key in the Magento response doesn't match the one that was sent in the request, don't cache under the request's key
+          if (bereq.url ~ "/graphql" && bereq.http.X-Magento-Cache-Id && bereq.http.X-Magento-Cache-Id != beresp.http.X-Magento-Cache-Id) {
+              set beresp.ttl = 0s;
+              set beresp.uncacheable = true;
+          }
 
           return (deliver);
       }
@@ -574,9 +676,9 @@ varnish:
           } else {
               set resp.http.X-Magento-Cache-Debug = "MISS";
           }
-
+      
           # Not letting browser to cache non-static files.
-          if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(pub/)?(media|static)/") {
+          if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(pub/)?(media|static|insecure)/") {
               set resp.http.Pragma = "no-cache";
               set resp.http.Expires = "-1";
               set resp.http.Cache-Control = "no-store, no-cache, must-revalidate, max-age=0";
@@ -614,7 +716,14 @@ varnish:
               return (deliver);
           }
       }
-
+      
+      sub vcl_synth {                
+          if (req.http.x-img-processing == "1") {
+              std.rollback(req);
+              set req.http.x-img-processing = "2";
+              return (restart);
+          }
+      }
 
 rabbitmq:
   enabled: true
@@ -625,6 +734,36 @@ rabbitmq:
   auth:
     username: phoenix
     password: "Magento123"
+
+
+imgproxy:
+  enabled: false
+  fullnameOverride: imgproxy
+  persistence:
+    enabled: true
+    existingClaim: magento-data
+    mountPath: /images/media
+    subPath: media
+  features:
+    compression:
+      jpegProgressive: true
+    urlSignature:
+      enabled: false
+    server:
+      useEtag: true
+      # TTL of 1 week
+      ttl: 604800
+    security:
+      allowedSources: "local://"
+    formatsSupportDetection:
+      webp:
+        enabled: true
+        enforced: true
+    custom:
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: "/images"
+    fallbackImage:
+      httpCode: 404
+
 
 persistence:
   enabled: true
