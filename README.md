@@ -323,6 +323,7 @@ This guide and the `values_gke.yaml` file are configured for the *magento.phoeni
   switch search engines.
 - Added imgproxy for dynamic image resizing. See imgproxy section for details.
 - Add disk-cache volume for Varnish
+- Updated Helm charts and container images for Redis, Varnish and RabbitMQ to meet Adobe Commerce/Magento 2.4.5 System Requirements
 
 ### [2.4.4] - 2023-02-20
 - Kubernetes 1.25 compatibility
