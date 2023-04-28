@@ -885,31 +885,34 @@ secrets:
   name: general-secrets
 
   credentials:
-    # customize MAGENTO_CLOUD_* values. use 'echo "<string>" | base64 -d' to read values.
-    MAGENTO_CLOUD_ROUTES: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
-    MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
-    MAGENTO_CLOUD_VARIABLES: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
-    RELAYHOST: my.relayhost.com
-    SMTP_USE_TLS: "false"
+    data:
+      # customize MAGENTO_CLOUD_* values. use 'echo "<string>" | base64 -d' to read values.
+      MAGENTO_CLOUD_ROUTES: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
+      MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+      MAGENTO_CLOUD_VARIABLES: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
+      RELAYHOST: my.relayhost.com
+      SMTP_USE_TLS: "false"
 
-#    ADD_SAMPLE_DATA: "true"
-#    COMPOSER_AUTH: |-
-#            {
-#              "http-basic": {
-#                "repo.magento.com": {
-#                  "username": "<user>",
-#                  "password": "<password>"
-#                }
-#              }
-#            }
+  #    ADD_SAMPLE_DATA: "true"
+  #    COMPOSER_AUTH: |-
+  #            {
+  #              "http-basic": {
+  #                "repo.magento.com": {
+  #                  "username": "<user>",
+  #                  "password": "<password>"
+  #                }
+  #              }
+  #            }
 
-    mariadb-password: topSecret
-    mariadb-replication-password: topSecret
-    mariadb-root-password: topSecret
+      mariadb-password: topSecret
+      mariadb-replication-password: topSecret
+      mariadb-root-password: topSecret
 
-    rabbitmq_user: phoenix
-    rabbitmq-erlang-cookie: QRQxPBgojUggajuw
-    rabbitmq-password: Magento123
+      rabbitmq_user: phoenix
+      rabbitmq-erlang-cookie: QRQxPBgojUggajuw
+      rabbitmq-password: Magento123
+
+    stringData:
 
     # External Secrets Operator template examples
 #    MAGENTO_CLOUD_RELATIONSHIPS: >-
@@ -941,8 +944,10 @@ secrets:
     # see https://external-secrets.io/v0.8.1/api/secretstore/
     store:
       name: vault
-      credentials: {}
-#        secret-id: "<app-secret-id>"
+      credentials:
+        data:
+#          secret-id: "<app-secret-id>"
+        stringData:
 
       controller: ""
       retrySettings: {}

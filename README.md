@@ -40,8 +40,9 @@ variables of the magento, cronjob and xdebug (optional) workloads as well as in 
 ```
 secrets:
   credentials:
-    MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
-    MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
+    data:
+      MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
+      MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
 
 ingress:
   hosts:
@@ -81,7 +82,8 @@ Like in the default `values.yaml` sensitive information can be set directly in t
 ```
 secrets:
   credentials:
-    mariadb-password: topSecret
+    data:
+      mariadb-password: topSecret
 ```
 
 While this is okay for testing, it is not recommended to use this in production environments.
@@ -90,7 +92,7 @@ While this is okay for testing, it is not recommended to use this in production 
 In many CI/CD pipelines credentials are accessible by environment variables which can be easily passed via CLI:
 
 ```
-helm install --set secrets.credentials.mariadb-password=$MYSQL_PASSWORD -f values.yaml magento2 .
+helm install --set secrets.credentials.data.mariadb-password=$MYSQL_PASSWORD -f values.yaml magento2 .
 ```
 
 ### External Secrets Operator (ESO)
@@ -348,6 +350,9 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
+### [2.6.1] - 2023-04-28
+- Add support for stringData credentials, changed `secrets.credentials` structure (BC break with 2.6.0) 
+
 ### [2.6.0] - 2023-04-28
 - *Breaking: Moved all credentials to a Kubernetes Secret. See new _secrets_ section in `values.yaml`*
 - Added support for [External Secrets Operator](https://external-secrets.io)
