@@ -38,15 +38,10 @@ The values*.yaml files contain domain specific configurations. You will need to 
 variables of the magento, cronjob and xdebug (optional) workloads as well as in the ingress section:
 
 ```
-magento:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
-
-cronjob:
-  env:
-    - name: MAGENTO_CLOUD_ROUTES
-      value: <base64-encoded-string-containing-your-domain>
+secrets:
+  credentials:
+    MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
+    MAGENTO_CLOUD_ROUTES: <base64-encoded-string-containing-your-domain>
 
 ingress:
   hosts:
@@ -74,6 +69,41 @@ If you prefer to skip Varnish for certain routes simply configure additional pat
 
 In case you want to protect the Magento backend by IP or BasicAuth we recommend to duplicate the `templates/ingress.yaml`
 (e.g. to your Helm project root) and configure a second Ingress with proper annotations.
+
+## Secrets
+
+It is recommended to store sensitive information in a Kubernetes Secret (default name "general-secrets"). The Helm
+Chart supports multiple ways to deploy secrets:
+
+### Secrets in value file
+Like in the default `values.yaml` sensitive information can be set directly in the YAML structure:
+
+```
+secrets:
+  credentials:
+    mariadb-password: topSecret
+```
+
+While this is okay for testing, it is not recommended to use this in production environments.
+
+### Set sensitive information via CLI
+In many CI/CD pipelines credentials are accessible by environment variables which can be easily passed via CLI:
+
+```
+helm install --set secrets.credentials.mariadb-password=$MYSQL_PASSWORD -f values.yaml magento2 .
+```
+
+### External Secrets Operator (ESO)
+Credentials could be safely stored in a Vault. The [ESO](https://external-secrets.io/) can read credentials form all
+major Vault providers, transform them and save them in a Kubernetes Secret. Even more it can automatically refresh them.
+
+Support for ESO can be enabled simply by setting `secrets.externalSecrets.enabled=true`. The template for the SecretStore
+allows flexible configuration of the preferred secret provider.
+
+The `value.yaml` provides an example configuration for [Hashicorp Vault](https://external-secrets.io/v0.8.1/provider/hashicorp-vault/).
+It also contains an ExternalSecret example for data and templates definition.
+For more information see the ESO [documentation](https://external-secrets.io/v0.8.1/api/components/). 
+
 
 ## Persistence
 
@@ -318,6 +348,10 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
+### [2.6.0] - 2023-04-28
+- *Breaking: Moved all credentials to a Kubernetes Secret. See new _secrets_ section in `values.yaml`*
+- Added support for [External Secrets Operator](https://external-secrets.io)
+
 ### [2.5.0] - 2023-02-20
 - Added Opensearch as alternative to Elasticsearch. Set `elasticsearch.enabled: false` and `opensearch.enabled: true` to 
   switch search engines.

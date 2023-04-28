@@ -101,3 +101,14 @@ imagePullSecrets:
     {{- end }}
   {{- end }}
 {{- end -}}
+
+{{/*
+Return secret name
+*/}}
+{{- define "magento.secretName" -}}
+  {{- if .Values.secrets.externalSecrets.enabled }}
+    {{- print "external-secrets-store" }}
+  {{- else -}}
+    {{- print .Values.secrets.name }}
+  {{- end -}}
+{{- end -}}

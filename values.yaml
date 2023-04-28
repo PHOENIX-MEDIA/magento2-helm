@@ -22,18 +22,34 @@ magento:
   fullnameOverride: magento
   replicas: 1
   env:
-    # customize MAGENTO_CLOUD_* values. use "base64 -d" to read values.
     - name: MAGENTO_CLOUD_ROUTES
-      value: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_ROUTES
     - name: MAGENTO_CLOUD_RELATIONSHIPS
-      value: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_RELATIONSHIPS
     - name: MAGENTO_CLOUD_VARIABLES
-      value: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
-
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_VARIABLES
     - name: RELAYHOST
-      value: my.relayhost.com
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: RELAYHOST
+          optional: true
     - name: SMTP_USE_TLS
-      value: "false"
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: SMTP_USE_TLS
+          optional: true
+
   podAnnotations: {}
   resources: {}
   lifecycle: {}
@@ -150,31 +166,46 @@ cronjob:
   name: cronjob
   replicas: 1
   env:
-    # customize MAGENTO_CLOUD_* values. use "base64 -d" to read values.
     - name: MAGENTO_CLOUD_ROUTES
-      value: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_ROUTES
     - name: MAGENTO_CLOUD_RELATIONSHIPS
-      value: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_RELATIONSHIPS
     - name: MAGENTO_CLOUD_VARIABLES
-      value: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
-#    - name: ADD_SAMPLE_DATA
-#      value: "true"
-#    - name: COMPOSER_AUTH
-#      value: |-
-#        {
-#          "http-basic": {
-#            "repo.magento.com": {
-#              "username": "<user>",
-#              "password": "<password>"
-#            }
-#          }
-#        }
-
-
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: MAGENTO_CLOUD_VARIABLES
     - name: RELAYHOST
-      value: my.relayhost.com
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: RELAYHOST
+          optional: true
     - name: SMTP_USE_TLS
-      value: "false"
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: SMTP_USE_TLS
+          optional: true
+    - name: ADD_SAMPLE_DATA
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: ADD_SAMPLE_DATA
+          optional: true
+    - name: COMPOSER_AUTH
+      valueFrom:
+        secretKeyRef:
+          name: general-secrets
+          key: COMPOSER_AUTH
+          optional: true
+
   podAnnotations: {}
   resources: {}
   strategy:
@@ -254,7 +285,7 @@ mariadb:
   auth:
     database: magento
     username: magento
-    password: topSecret
+    existingSecret: general-secrets
 
   master:
     podLabels: {}
@@ -733,7 +764,8 @@ rabbitmq:
     enabled: false
   auth:
     username: phoenix
-    password: "Magento123"
+    existingPasswordSecret: general-secrets
+    existingErlangSecret: general-secrets
 
 
 imgproxy:
@@ -820,7 +852,7 @@ ingress:
     #        10.0.0.0/24
     #        172.10.0.1
     #      nginx.ingress.kubernetes.io/auth-type: basic
-    #      nginx.ingress.kubernetes.io/auth-secret: my-auth-secret
+    #      nginx.ingress.kubernetes.io/auth-secret: general-secrets
     #      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
     #      nginx.ingress.kubernetes.io/configuration-snippet: |-
     #        satisfy any;
@@ -845,6 +877,152 @@ ingress:
 #    - magento.local
 
 #    tlsSecret: site-cert
+
+
+secrets:
+  enabled: true
+
+  name: general-secrets
+
+  credentials:
+    # customize MAGENTO_CLOUD_* values. use 'echo "<string>" | base64 -d' to read values.
+    MAGENTO_CLOUD_ROUTES: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
+    MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+    MAGENTO_CLOUD_VARIABLES: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
+    RELAYHOST: my.relayhost.com
+    SMTP_USE_TLS: "false"
+
+#    ADD_SAMPLE_DATA: "true"
+#    COMPOSER_AUTH: |-
+#            {
+#              "http-basic": {
+#                "repo.magento.com": {
+#                  "username": "<user>",
+#                  "password": "<password>"
+#                }
+#              }
+#            }
+
+    mariadb-password: topSecret
+    mariadb-replication-password: topSecret
+    mariadb-root-password: topSecret
+
+    rabbitmq_user: phoenix
+    rabbitmq-erlang-cookie: QRQxPBgojUggajuw
+    rabbitmq-password: Magento123
+
+    # External Secrets Operator template examples
+#    MAGENTO_CLOUD_RELATIONSHIPS: >-
+#      {{ print "{\"database\": [{\"host\": \"mysql\", \"path\": \""  .mysql_database "\", \"password\": \"" .mysql_password "\", \"username\": \"" .mysql_user "\", \"port\": \"3306\"}], \"redis\": [{\"host\": \"redis-master\", \"port\": \"6379\"}], \"elasticsearch\": [{\"host\": \"elasticsearch\", \"scheme\": \"http\", \"port\": \"9200\"}], \"rabbitmq\": [{\"password\": \"" .rabbitmq_password "\", \"scheme\": \"amqp\", \"port\": \"5672\", \"host\": \"rabbitmq\", \"username\": \"" .rabbitmq_username "\"}]}" | b64enc }}
+#    MAGENTO_CLOUD_VARIABLES: >-
+#      {{ print "{\"ADMIN_FIRSTNAME\": \"Your Firstname\", \"ADMIN_LASTNAME\": \"Your Lastname\", \"ADMIN_EMAIL\": \"account@mail.com\", \"ADMIN_USERNAME\": \"" .magento_admin_username "\", \"ADMIN_PASSWORD\": \"" .magento_admin_password "\", \"ADMIN_URL\": \"admin\", \"CRYPT_KEY\": \"" .magento_crypt_key "\"}" | b64enc }}
+#    RELAYHOST: 'my.relayhost.com'
+#    SMTP_USE_TLS: 'true'
+#    auth: '{{ htpasswd .basic_auth_username .basic_auth_password }}'
+
+#    MYSQL_DATABASE: '{{ .mysql_database }}'
+#    MYSQL_PASSWORD: '{{ .mysql_password }}'
+#    MYSQL_ROOT_PASSWORD: '{{ .mysql_root_password }}'
+#    MYSQL_USER: '{{ .mysql_user }}'
+
+#    mariadb-password: '{{ .mysql_password }}'
+#    mariadb-replication-password: '{{ .mysql_password }}'
+#    mariadb-root-password: '{{ .mysql_root_password }}'
+
+#    rabbitmq_user: '{{ .rabbitmq_username }}'
+#    rabbitmq-erlang-cookie: '{{ .rabbitmq_erlang_cookie }}'
+#    rabbitmq-password: '{{ .rabbitmq_password }}'
+
+
+  # requires External Secrets Operator (https://external-secrets.io/)
+  externalSecrets:
+    enabled: false
+
+    # see https://external-secrets.io/v0.8.1/api/secretstore/
+    store:
+      name: vault
+      credentials: {}
+#        secret-id: "<app-secret-id>"
+
+      controller: ""
+      retrySettings: {}
+
+
+      provider: {}
+         # example for Hashicorp Vault (see https://external-secrets.io/v0.8.1/provider/hashicorp-vault/)
+#        vault:
+#          server: "https://your-vault.com"
+#          path: "customer"
+#          auth:
+#            appRole:
+#              path: "approle"
+#              roleId: "<app-role-name>"
+#              secretRef:
+#                name: external-secrets-store
+#                key: secret-id
+
+    # see https://external-secrets.io/v0.8.1/api/externalsecret/
+    secrets:
+      name: vault-secrets
+      labels: {}
+      annotations: {}
+      refreshInterval: "1m"
+
+      data:
+#        - secretKey: magento_admin_username
+#          remoteRef:
+#            key: magento/dev/magento-admin
+#            property: username
+#        - secretKey: magento_admin_password
+#          remoteRef:
+#            key: magento/dev/magento-admin
+#            property: password
+#        - secretKey: magento_crypt_key
+#          remoteRef:
+#            key: magento/dev/magento-admin
+#            property: crypt_key
+#        - secretKey: basic_auth_username
+#          remoteRef:
+#            key: magento/dev/magento-admin
+#            property: basic-auth-username
+#        - secretKey: basic_auth_password
+#          remoteRef:
+#            key: magento/dev/magento-admin
+#            property: basic-auth-password
+
+#        - secretKey: mysql_database
+#          remoteRef:
+#            key: magento/dev/mysql
+#            property: database
+#        - secretKey: mysql_password
+#          remoteRef:
+#            key: magento/dev/mysql
+#            property: password
+#        - secretKey: mysql_user
+#          remoteRef:
+#            key: magento/dev/mysql
+#            property: username
+#        - secretKey: mysql_root_password
+#          remoteRef:
+#            key: magento/dev/mysql
+#            property: root_password
+
+#        - secretKey: rabbitmq_username
+#          remoteRef:
+#            key: magento/dev/rabbitmq
+#            property: username
+#        - secretKey: rabbitmq_password
+#          remoteRef:
+#            key: magento/dev/rabbitmq
+#            property: password
+#        - secretKey: rabbitmq_erlang_cookie
+#          remoteRef:
+#            key: magento/dev/rabbitmq
+#            property: erlang-cookie
+
+      target:
+        creationPolicy: Owner
+        deletionPolicy: Retain
 
 managedCert:
   enabled: false
