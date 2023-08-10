@@ -50,6 +50,8 @@ magento:
           key: SMTP_USE_TLS
           optional: true
 
+  annotations: {}
+  labels: {}
   podAnnotations: {}
   resources: {}
   lifecycle: {}
@@ -63,6 +65,7 @@ magento:
   podSecurityContext: {}
   securityContext: {}
   tolerations: []
+  sidecars: {}
   volumes:
     - name: magento-data
       persistentVolumeClaim:
@@ -152,12 +155,15 @@ xdebug:
       value: "true"
     - name: XDEBUG_REMOTE_HOST
       value: "dbgp-proxy"
+  annotations: {}
+  labels: {}
   podAnnotations: {}
   resources: {}
   podSecurityContext: {}
   securityContext: {}
   tolerations: []
   affinity: {}
+  sidecars: {}
 
 
 ########## CRONJOB ##########
@@ -206,8 +212,11 @@ cronjob:
           key: COMPOSER_AUTH
           optional: true
 
+  annotations: {}
+  labels: {}
   podAnnotations: {}
   resources: {}
+  sidecars: {}
   strategy:
     rollingUpdate:
       maxSurge: 1

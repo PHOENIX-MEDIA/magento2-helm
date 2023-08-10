@@ -1,7 +1,7 @@
 name: magento
 apiVersion: v2
 appVersion: 2.4.5
-version: 2.6.1
+version: 2.7.0
 description: Magento chart to deploy the application including services.
 type: application
 keywords:

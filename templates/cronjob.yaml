@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.cronjob.name }}
+  annotations:
+    {{ toYaml .Values.cronjob.annotations | indent 4}}
   labels:
     helm.sh/chart: {{ include "magento.chart" . }}
     app.kubernetes.io/name: {{ .Values.cronjob.name }}
@@ -61,6 +63,9 @@ spec:
           tty: true
           volumeMounts:
             {{ toYaml .Values.cronjob.volumeMounts | nindent 12 }}
+        {{- if .Values.cronjob.sidecars }}
+        {{ toYaml .Values.cronjob.sidecars | nindent 8 }}
+        {{- end }}
       dnsPolicy: ClusterFirst
       tolerations: {{ toYaml .Values.cronjob.tolerations | nindent 8 }}
       hostAliases:
