@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "magento.name" . }}
+  annotations:
+    {{ toYaml .Values.magento.annotations | indent 4}}
   labels:
     {{- include "magento.labels" . | nindent 4 }}
 spec:
@@ -55,6 +57,9 @@ spec:
           ports:
             - containerPort: 80
               name: http
+        {{- if .Values.magento.sidecars }}
+        {{ toYaml .Values.magento.sidecars | nindent 8 }}
+        {{- end }}
       dnsPolicy: ClusterFirst
       tolerations: {{ toYaml .Values.magento.tolerations | nindent 8 }}
       hostAliases:
