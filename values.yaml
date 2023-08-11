@@ -65,7 +65,7 @@ magento:
   podSecurityContext: {}
   securityContext: {}
   tolerations: []
-  sidecars: {}
+  sidecars: []
   volumes:
     - name: magento-data
       persistentVolumeClaim:
@@ -163,7 +163,7 @@ xdebug:
   securityContext: {}
   tolerations: []
   affinity: {}
-  sidecars: {}
+  sidecars: []
 
 
 ########## CRONJOB ##########
@@ -216,7 +216,7 @@ cronjob:
   labels: {}
   podAnnotations: {}
   resources: {}
-  sidecars: {}
+  sidecars: []
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -1037,6 +1037,9 @@ secrets:
       target:
         creationPolicy: Owner
         deletionPolicy: Retain
+
+# extra K8s manifests to deploy
+extraObjects: []
 
 managedCert:
   enabled: false

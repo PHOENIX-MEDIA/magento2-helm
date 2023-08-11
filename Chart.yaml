@@ -28,17 +28,17 @@ dependencies:
     condition: elasticsearch.enabled
   - name: opensearch
     repository: https://opensearch-project.github.io/helm-charts/
-    version: ~1.18.0
+    version: ~1.21.0
     condition: opensearch.enabled
   - name: varnish
     repository: https://charts.softonic.io
-    version: 0.13.1
+    version: 0.18.5
     condition: varnish.enabled
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
     version: ~10.3.0
     condition: rabbitmq.enabled
   - name: imgproxy
-    version: ~0.8.27
+    version: ~0.8.34
     repository: https://helm.imgproxy.net/
     condition: imgproxy.enabled
