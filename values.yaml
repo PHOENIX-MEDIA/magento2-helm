@@ -775,6 +775,9 @@ rabbitmq:
     username: phoenix
     existingPasswordSecret: general-secrets
     existingErlangSecret: general-secrets
+  rabbitmq:
+    rbac:
+      create: false
 
 
 imgproxy:
