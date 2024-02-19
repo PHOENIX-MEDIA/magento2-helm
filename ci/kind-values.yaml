@@ -1,0 +1,15 @@
+# test CI values for K8S kind deployment
+opensearch:
+  extraEnvs:
+    - name: DISABLE_SECURITY_PLUGIN
+      value: "true"
+    - name: DISABLE_INSTALL_DEMO_CONFIG
+      value: "true"
+    - name: bootstrap.memory_lock
+      value: 'false'
+    - name: bootstrap.system_call_filter
+      value: 'false'
+
+persistence:
+  accessMode: ReadWriteOnce
+  storageClassName: ""
