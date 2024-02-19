@@ -373,12 +373,6 @@ varnish:
           }
       }
 
-# Uncomment and edit section if you want to generate ssl certificate for your domain
-managedCert:
-  enabled: false
-#  domains:
-#    - <your-domain>
-
 ingress:
   enabled: true
   hosts:
@@ -388,3 +382,15 @@ ingress:
 #      - path: "/"
 #        serviceName: varnish
 #        servicePort: 8080
+
+# extra K8s manifests to deploy
+extraObjects: []
+# Uncomment and edit section if you want to generate ssl certificate for your domain
+#extraObjects:
+#  - apiVersion: networking.gke.io/v1
+#    kind: ManagedCertificate
+#    metadata:
+#      name: managed-cert
+#    spec:
+#      domains:
+#        - <your-domain>

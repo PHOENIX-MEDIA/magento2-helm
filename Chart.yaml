@@ -1,6 +1,6 @@
 name: magento
 apiVersion: v2
-appVersion: 2.4.5
+appVersion: 2.4.6
 version: 2.7.0
 description: Magento chart to deploy the application including services.
 type: application
@@ -28,17 +28,17 @@ dependencies:
     condition: elasticsearch.enabled
   - name: opensearch
     repository: https://opensearch-project.github.io/helm-charts/
-    version: ~1.21.0
+    version: ~1.23.0
     condition: opensearch.enabled
   - name: varnish
     repository: https://charts.softonic.io
-    version: 0.18.5
+    version: 0.18.6
     condition: varnish.enabled
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
     version: ~10.3.0
     condition: rabbitmq.enabled
   - name: imgproxy
-    version: ~0.8.34
+    version: ~0.9.0
     repository: https://helm.imgproxy.net/
     condition: imgproxy.enabled

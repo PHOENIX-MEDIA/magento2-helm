@@ -1,9 +1,0 @@
-{{- if .Values.managedCert.enabled -}}
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: managed-cert
-spec:
-  domains:
-    {{ toYaml .Values.managedCert.domains }}
-{{- end -}}

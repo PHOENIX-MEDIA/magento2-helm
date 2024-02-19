@@ -355,7 +355,12 @@ This guide and the `values_gke.yaml` file are configured for the *magento.phoeni
 - Add support for sidecars in Magento deployments
 - Add extra manifest to deploy additional objects
 - Updated Opensearch, Varnish and imgproxy charts
+- Don't deploy xdebug service if not enabled
 - Don't deploy RBAC for RabbitMQ
+- Removed GKE managed-cert template. Use new extra-manifest instead.
+- Added GH action for linting and testing the chart
+- Fixed chart-releaser for automated publishing
+- Kubernetes 1.26-1.29 compatibility
 
 ### [2.6.1] - 2023-04-28
 - Add support for stringData credentials, changed `secrets.credentials` structure (BC break with 2.6.0) 

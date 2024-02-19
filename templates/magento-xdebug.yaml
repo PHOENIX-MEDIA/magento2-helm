@@ -3,8 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "magento.name" . }}-xdebug
-  annotations:
-    {{ toYaml .Values.xdebug.annotations | indent 4}}
+  annotations: {{ toYaml .Values.xdebug.annotations | nindent 4 }}
   labels:
     helm.sh/chart: {{ include "magento.chart" . }}
     app.kubernetes.io/name: {{ include "magento.name" . }}-xdebug
@@ -13,6 +12,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
     {{- end }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- range $key, $val := ($.Values.xdebug.labels | default dict) }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1

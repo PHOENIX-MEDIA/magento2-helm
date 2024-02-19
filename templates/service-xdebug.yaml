@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: xdebug
+  annotations: {{ toYaml .Values.service.annotations | nindent 4 }}
   labels:
     helm.sh/chart: {{ include "magento.chart" . }}
     app.kubernetes.io/name: {{ include "magento.fullname" . }}-xdebug
@@ -11,9 +12,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
     {{- end }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-  {{- if .Values.service.annotations }}
-  annotations: {{ toYaml .Values.service.annotations . | nindent 4 }}
-  {{- end }}
+    {{- range $key, $val := ($.Values.service.labels | default dict) }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
 spec:
   type: {{ .Values.service.type }}
   sessionAffinity: {{ .Values.service.sessionAffinity }}
