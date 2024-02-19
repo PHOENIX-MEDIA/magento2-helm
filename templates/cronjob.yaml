@@ -3,8 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.cronjob.name }}
-  annotations:
-    {{ toYaml .Values.cronjob.annotations | indent 4}}
+  annotations: {{ toYaml .Values.cronjob.annotations | nindent 4 }}
   labels:
     helm.sh/chart: {{ include "magento.chart" . }}
     app.kubernetes.io/name: {{ .Values.cronjob.name }}
@@ -13,6 +12,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
     {{- end }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- range $key, $val := ($.Values.cronjob.labels | default dict) }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
 spec:
   progressDeadlineSeconds: 1200
   replicas: {{ .Values.cronjob.replicas }}

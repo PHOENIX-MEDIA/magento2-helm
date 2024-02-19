@@ -3,7 +3,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "magento.fullname" . }}
-  labels: {{ include "magento.labels" . | nindent 4 }}
+  labels:
+    {{- include "magento.labels" . | nindent 4 }}
+    {{- range $key, $val := ($.Values.ingress.labels | default dict) }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
   {{- if or .Values.ingress.annotations .Values.ingress.certManager .Values.ingress.useProxyProtocol }}
   annotations:
     {{- if or .Values.ingress.annotations.letsencrypt .Values.ingress.certManager }}

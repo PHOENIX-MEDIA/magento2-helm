@@ -812,6 +812,8 @@ imgproxy:
 persistence:
   enabled: true
   name: magento-data
+  annotations: {}
+  labels: {}
   #existingClaim:
   accessMode: ReadWriteMany
   size: 10Gi
@@ -824,6 +826,7 @@ service:
   type: ClusterIP
   port: 80
   annotations: {}
+  labels: {}
   sessionAffinity: "None"
   clusterIP: ""
   loadBalancerSourceRanges: []
@@ -837,6 +840,7 @@ serviceHeadless:
   enabled: true
   port: 80
   annotations: {}
+  labels: {}
 
 ## Configure the ingress resource that allows you to access the
 ## Magento installation. Set up the URL
@@ -895,6 +899,9 @@ secrets:
   enabled: true
 
   name: general-secrets
+
+  annotations: {}
+  labels: {}
 
   credentials:
     data:
@@ -956,6 +963,8 @@ secrets:
     # see https://external-secrets.io/v0.8.1/api/secretstore/
     store:
       name: vault
+      annotations: {}
+      labels: {}
       credentials:
         data:
 #          secret-id: "<app-secret-id>"
