@@ -12,7 +12,7 @@ global:
 image:
   # registry:
   repository: phoenixmedia/magento2
-  tag: "2.4.5"
+  tag: "2.4.6"
   pullPolicy: IfNotPresent
 
 
@@ -134,7 +134,7 @@ magento:
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
     - name: check-magento-install
       image: busybox
       imagePullPolicy: IfNotPresent
@@ -271,7 +271,7 @@ cronjob:
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
 
   terminationGracePeriodSeconds: 600
   lifecycle:
@@ -321,12 +321,12 @@ redis:
 
 
 elasticsearch:
-  enabled: true
+  enabled: false
   image: phoenixmedia/magento-cloud-docker-elasticsearch
   imageTag: 7.17-1.3.5
   replicas: 1
   minimumMasterNodes: 1
-  esJavaOpts: "-Xmx2g -Xms2g"
+  esJavaOpts: "-Xmx256M -Xms256M"
   extraEnvs:
     - name: cluster.initial_master_nodes
       value: null
@@ -336,13 +336,13 @@ elasticsearch:
 
 
 opensearch:
-  enabled: false
+  enabled: true
   image:
     repository: magento/magento-cloud-docker-opensearch
-    tag: 1.2-1.3.4
+    tag: 2.5-1.4.0
   replicas: 1
   masterService: "elasticsearch"
-  opensearchJavaOpts: "-Xmx2g -Xms2g"
+  opensearchJavaOpts: "-Xmx256M -Xms256M"
   sysctlInit:
     enabled: true
   config:
@@ -369,8 +369,10 @@ varnish:
   fullnameOverride: "varnish"
   image:
     repository: varnish
-    tag: "7.1-alpine"
-
+    tag: "7.3-alpine"
+    pullPolicy: Always
+  securityContext:
+    runAsUser: 0
   rolloutDeployment: false
   varnishSize: 128M
   arguments:
@@ -907,7 +909,7 @@ secrets:
     data:
       # customize MAGENTO_CLOUD_* values. use 'echo "<string>" | base64 -d' to read values.
       MAGENTO_CLOUD_ROUTES: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
-      MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwiZWxhc3RpY3NlYXJjaCI6W3siaG9zdCI6ImVsYXN0aWNzZWFyY2gtbWFzdGVyIiwgInBvcnQiOiAiOTIwMCIsICJzY2hlbWUiOiJodHRwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
+      MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwib3BlbnNlYXJjaCI6IFt7Imhvc3QiOiAiZWxhc3RpY3NlYXJjaCIsICJzY2hlbWUiOiAiaHR0cCIsICJwb3J0IjogIjkyMDAifV0sInJhYmJpdG1xIjpbeyJob3N0IjoicmFiYml0bXEiLCAidXNlcm5hbWUiOiJwaG9lbml4IiwgInBhc3N3b3JkIjoiTWFnZW50bzEyMyIsICJzY2hlbWUiOiJhbXFwIiwgInBvcnQiOiAiNTY3MiJ9XX0=
       MAGENTO_CLOUD_VARIABLES: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
       RELAYHOST: my.relayhost.com
       SMTP_USE_TLS: "false"
