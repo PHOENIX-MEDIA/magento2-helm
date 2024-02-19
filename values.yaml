@@ -122,23 +122,23 @@ magento:
     - name: check-redis
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done']
     - name: check-rabbitmq
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
     - name: check-mysql
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 mysql 3306 2>&1| grep -q open; do echo \"waiting for mysql\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 mysql 3306 2>&1| grep -q open; do echo \"waiting for mysql\"; sleep 1s; done']
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
     - name: check-magento-install
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while [ ! -f /tmp/shared/var/.magento-installed ]; do echo \"waiting for Magento installation process to finish\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while [ ! -f /tmp/shared/var/.magento-installed ]; do echo \"waiting for Magento installation process to finish\"; sleep 1s; done']
       volumeMounts:
         - name: magento-data
           mountPath: /tmp/shared
@@ -259,19 +259,19 @@ cronjob:
     - name: check-redis
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done']
     - name: check-rabbitmq
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
     - name: check-mysql
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 mysql 3306 2>&1| grep -q open; do echo \"waiting for mysql\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 mysql 3306 2>&1| grep -q open; do echo \"waiting for mysql\"; sleep 1s; done']
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: [ 'sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done' ]
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
 
   terminationGracePeriodSeconds: 600
   lifecycle:
@@ -417,7 +417,7 @@ varnish:
           .window = 5;
           .threshold = 3;
       }
-      
+
       backend default {
           .host = "localhost";
           .port = "80";
@@ -445,7 +445,7 @@ varnish:
               between_bytes_timeout = 90s,
               ttl = 10s
           );
-          
+
           new imgproxy_directory = dynamic.director(
               port = "80",
               share = HOST,
@@ -479,7 +479,7 @@ varnish:
               }
               return (synth(200, "Purged"));
           }
-      
+
           set req.backend_hint = magento_director.backend("magento-headless");
 
           if (req.method != "GET" &&
@@ -503,7 +503,7 @@ varnish:
       #        set req.backend_hint = magento_director.backend("xdebug");
       #        return (pass);
       #    }
-      
+
           # We only deal with GET and HEAD by default
           if (req.method != "GET" && req.method != "HEAD") {
               return (pass);
@@ -555,7 +555,7 @@ varnish:
               if (req.url ~ "(?i)^/(pub/)?media/.*\.(jpe?g|png|gif|webp)(\?.*)?$" && req.restarts == 0 && std.healthy(imgproxy_directory.backend("imgproxy"))) {
                   set req.backend_hint = imgproxy_directory.backend("imgproxy");
                   set req.http.x-img-processing = "1";
-    
+
                   set req.http.X-img-width = regsub(req.url, ".*width=([0-9]+)(.*)?", "\1");
                   if (req.http.X-img-width !~ "^[0-9]{2,4}$") { set req.http.X-img-width = "2000"; }
                   set req.http.X-img-height = regsub(req.url, ".*height=([0-9]+)(.*)?", "\1");
@@ -564,14 +564,14 @@ varnish:
                   std.log("img-width: " + req.http.X-img-width);
                   std.log("img-height: " + req.http.X-img-height);
                   std.log("img-path: " + req.http.X-img-path);
-    
+
                   set req.url = "/insecure/rs:fit:" + req.http.X-img-width + ":" + req.http.X-img-height + "/plain/" + req.http.X-img-path;
               }
               else if (req.http.x-img-processing == "1") {
                   # request might get restarted (see vcl_hit). make sure backend_hint is set.
                   set req.backend_hint = imgproxy_directory.backend("imgproxy");
               }
-              # Unless static content signing is deactivated it should be save to cache all static files 
+              # Unless static content signing is deactivated it should be save to cache all static files
               # else {
               #  # Static files should not be cached by default
               #  return (pass);
@@ -604,14 +604,14 @@ varnish:
                 hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
             }
           }
-      
+
           # For multi site configurations to not cache each other's content
           if (req.http.host) {
               hash_data(req.http.host);
           } else {
               hash_data(server.ip);
           }
-      
+
           if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.cookie ~ "X-Magento-Vary=") {
               hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
           }
@@ -674,7 +674,7 @@ varnish:
           if (beresp.ttl > 0s && (bereq.method == "GET" || bereq.method == "HEAD")) {
               unset beresp.http.set-cookie;
           }
-      
+
           # image processing
           if (bereq.http.x-img-processing == "1") {
               set beresp.storage = storage.images;
@@ -716,7 +716,7 @@ varnish:
           } else {
               set resp.http.X-Magento-Cache-Debug = "MISS";
           }
-      
+
           # Not letting browser to cache non-static files.
           if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(pub/)?(media|static|insecure)/") {
               set resp.http.Pragma = "no-cache";
@@ -756,8 +756,8 @@ varnish:
               return (deliver);
           }
       }
-      
-      sub vcl_synth {                
+
+      sub vcl_synth {
           if (req.http.x-img-processing == "1") {
               std.rollback(req);
               set req.http.x-img-processing = "2";
@@ -814,7 +814,7 @@ persistence:
   name: magento-data
   annotations: {}
   labels: {}
-  #existingClaim:
+  # existingClaim:
   accessMode: ReadWriteMany
   size: 10Gi
   storageClassName: "files"
