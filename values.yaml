@@ -61,6 +61,10 @@ magento:
       maxSurge: 100%
       maxUnavailable: 0
     type: RollingUpdate
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 0
+    maxUnavailable: 1
 
   podSecurityContext: {}
   securityContext: {}

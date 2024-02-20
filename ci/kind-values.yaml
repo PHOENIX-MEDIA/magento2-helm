@@ -1,4 +1,8 @@
 # test CI values for K8S kind deployment
+magento:
+  podDisruptionBudget:
+    enabled: true
+
 opensearch:
   extraEnvs:
     - name: DISABLE_SECURITY_PLUGIN

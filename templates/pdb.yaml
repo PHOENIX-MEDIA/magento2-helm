@@ -1,0 +1,22 @@
+{{- if .Values.magento.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "magento.name" . }}-pdb
+  annotations: {{ toYaml .Values.magento.annotations | nindent 4 }}
+  labels:
+    {{- include "magento.labels" . | nindent 4 }}
+    {{- range $key, $val := ($.Values.magento.labels | default dict) }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
+spec:
+  {{- if .Values.magento.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.magento.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.magento.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.magento.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "magento.selectorLabels" . | nindent 6 }}
+{{- end -}}
