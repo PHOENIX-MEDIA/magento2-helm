@@ -61,10 +61,39 @@ magento:
       maxSurge: 100%
       maxUnavailable: 0
     type: RollingUpdate
+
   podDisruptionBudget:
     enabled: false
     minAvailable: 0
     maxUnavailable: 1
+
+  # HPA configuration, see https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior
+  horizontalPodAutoscaler:
+    enabled: false
+    minCount: 1
+    maxCount: 3
+
+    scaleUp:
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+      stabilizationWindowSeconds: 300
+
+    scaleDown:
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+      stabilizationWindowSeconds: 300
+
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
 
   podSecurityContext: {}
   securityContext: {}
