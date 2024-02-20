@@ -2,6 +2,8 @@
 magento:
   podDisruptionBudget:
     enabled: true
+  horizontalPodAutoscaler:
+    enabled: true
 
 opensearch:
   extraEnvs:
