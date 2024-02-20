@@ -854,8 +854,8 @@ ingress:
   # ingressClassName: nginx
   certManager: false
   useProxyProtocol: true
-  annotations: {}
-    #  annotations:
+  annotations:
+    letsencrypt: false
     #    extraRaw: |-
     #      nginx.ingress.kubernetes.io/proxy-body-size: "1m"
     #      nginx.ingress.kubernetes.io/proxy-buffer-size: '32k'
@@ -1054,6 +1054,3 @@ secrets:
 
 # extra K8s manifests to deploy
 extraObjects: []
-
-managedCert:
-  enabled: false

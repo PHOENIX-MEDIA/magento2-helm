@@ -10,6 +10,17 @@ opensearch:
     - name: bootstrap.system_call_filter
       value: 'false'
 
+imgproxy:
+  enabled: true
+
 persistence:
   accessMode: ReadWriteOnce
   storageClassName: ""
+
+ingress:
+  enabled: true
+  hosts:
+    - name: magneto.local
+      paths:
+        - path: "/"
+          serviceName: varnish
