@@ -6,6 +6,12 @@ configuring the services.
 
 The chart has been battle tested in Magento2 OpenSource and Adobe Commerce production environments. The bundled `values.yaml` provides basic settings, which should be adjusted before deployment.
 
+## TL;DR
+
+```
+helm install --create-namespace -n magento2-demo magento2 oci://registry-1.docker.io/phoenixmedia/magento --version 2.7.0
+```
+
 ## Magento2 base image
 The chart references [PHOENIX MEDIA's](https://www.phoenix-media.eu) Magento2 Docker image. It consists of an
 [Alpine nginx+PHP8.1 base image](https://github.com/PHOENIX-MEDIA/docker-nginx-php), [Magento OpenSource 2.4.4 source code](https://github.com/magento/magento2)
