@@ -8,8 +8,22 @@ The chart has been battle tested in Magento2 OpenSource and Adobe Commerce produ
 
 ## TL;DR
 
-```
+Install via CLI:
+
+```bash
 helm install --create-namespace -n magento2-demo magento2 oci://registry-1.docker.io/phoenixmedia/magento --version 2.7.0
+```
+
+Add as dependency to existing chart:
+
+```yaml
+apiVersion: v2
+name: my-project-chart
+...
+dependencies:
+  - name: magento
+    version: 2.7.0
+    repository: oci://registry-1.docker.io/phoenixmedia
 ```
 
 ## Magento2 base image
