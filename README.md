@@ -28,7 +28,7 @@ dependencies:
 
 ## Magento2 base image
 The chart references [PHOENIX MEDIA's](https://www.phoenix-media.eu) Magento2 Docker image. It consists of an
-[Alpine nginx+PHP8.1 base image](https://github.com/PHOENIX-MEDIA/docker-nginx-php), [Magento OpenSource 2.4.4 source code](https://github.com/magento/magento2)
+[Alpine nginx+PHP8.2 base image](https://github.com/PHOENIX-MEDIA/docker-nginx-php), [Magento OpenSource 2.4.6-p4 source code](https://github.com/magento/magento2)
 and a few Composer packages to add [build+deploy scripts](https://github.com/PHOENIX-MEDIA/magento2-cloud-build). The image is available on [DockerHub](https://hub.docker.com/r/phoenixmedia/magento2)
 and the source code including Github Action is available in the [magento2-build repository](https://github.com/PHOENIX-MEDIA/magento2-build).
 
