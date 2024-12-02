@@ -843,6 +843,44 @@ imgproxy:
     fallbackImage:
       httpCode: 404
 
+waf:
+  enabled: false
+  #replicas: 1
+  #annotations: {}
+  #labels: {}
+  #image:
+  #  repository: phoenixmedia/modsecurity-crs
+  #  tag: main
+  #  pullPolicy: Always
+  #env:
+  #  # see more configuration options here: https://github.com/coreruleset/modsecurity-crs-docker/blob/main/README.md
+  #  # keep in mind that this is a nginx image...
+  #  - name: BACKEND
+  #    value: "http://magento.${NAMESPACE}.svc.cluster.local:80"  # Forward traffic to magento
+  #resources:
+  #  requests:
+  #    memory: 512Mi
+  #    cpu: 300m
+  
+  #readinessProbe:
+  #  httpGet:
+  #    path: /healthz
+  #    port: 8080
+  #    # if the probe fails 2 times within 10 secondary, the pod is considered as "not ready"
+  #  periodSeconds: 5
+  #  timeoutSeconds: 1
+  #  successThreshold: 2
+  #  failureThreshold: 2
+
+  #livenessProbe:
+  #  httpGet:
+  #    path: /healthz
+  #    port: 8080
+  #  # if the probe fails 3 times within 30 seconds, the pod will get restarted
+  #  periodSeconds: 10
+  #  timeoutSeconds: 1
+  #  failureThreshold: 3
+
 
 persistence:
   enabled: true

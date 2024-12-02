@@ -1,0 +1,15 @@
+{{- if and .Values.waf .Values.waf.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: modsecurity-crs
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: modsecurity-crs
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+{{- end -}}

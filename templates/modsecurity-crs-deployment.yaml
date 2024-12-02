@@ -1,0 +1,36 @@
+{{- if and .Values.waf .Values.waf.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modsecurity-crs
+  annotations: {{ toYaml .Values.waf.annotations | nindent 4 }}
+  labels: {{ toYaml .Values.waf.labels | nindent 4 }}
+spec:
+  replicas: {{ .Values.waf.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: modsecurity-crs
+  template:
+    metadata:
+      labels:
+        app: modsecurity-crs
+    spec:
+      containers:
+        - name: modsecurity-crs
+          image: {{ .Values.waf.image.repository }}:{{ .Values.waf.image.tag }}
+          imagePullPolicy: {{ .Values.waf.image.pullPolicy | default "Always" }}
+          resources: {{ toYaml .Values.waf.resources | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.waf.readinessProbe | nindent 12 }}
+          livenessProbe: {{ toYaml .Values.waf.livenessProbe | nindent 12 }}
+          startupProbe: {{ toYaml .Values.waf.startupProbe | nindent 12 }}
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe: {{ toYaml .Values.waf.readinessProbe | nindent 12 }}
+          livenessProbe: {{ toYaml .Values.waf.livenessProbe | nindent 12 }}
+          env:
+            - name: PORT
+              value: "8080"
+            {{ toYaml .Values.waf.env | nindent 12 }}
+    dnsPolicy: ClusterFirst
+{{- end -}}

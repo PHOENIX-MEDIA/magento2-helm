@@ -1,0 +1,414 @@
+varnish:
+  vcl:
+    default.vcl: |-
+      vcl 4.0;
+
+      import std;
+      import dynamic;
+      # The minimal Varnish version is 6.0
+      # For SSL offloading, pass the following header in your proxy server or load balancer: 'X-Forwarded-Proto: https'
+
+      probe magento_probe {
+          .url = "/health_check.php";
+          .timeout = 5s;
+          .interval = 5s;
+          .window = 5;
+          .initial = 3;
+          .threshold = 3;
+      }
+
+      probe imgproxy_probe {
+          .url = "/health";
+          .timeout = 5s;
+          .interval = 5s;
+          .initial = 3;
+          .window = 5;
+          .threshold = 3;
+      }
+
+      backend default {
+          .host = "localhost";
+          .port = "80";
+          .probe = magento_probe;
+      }
+
+      acl purge {
+          "localhost";
+          "127.0.0.1";
+          "172.16.0.0/12";
+          "10.0.0.0/8";
+          "magento";
+      }
+
+      #acl xdebug-users {
+      #    "192.168.0.0/24";
+      #}
+
+      sub vcl_init {
+          new magento_director = dynamic.director(
+              port = "8080",
+              share = HOST,
+              probe = magento_probe,
+              first_byte_timeout = 18000s,
+              between_bytes_timeout = 90s,
+              ttl = 10s
+          );
+
+          new imgproxy_directory = dynamic.director(
+              port = "80",
+              share = HOST,
+              probe = imgproxy_probe,
+              first_byte_timeout = 5s,
+              between_bytes_timeout = 5s,
+              ttl = 10s
+          );
+      }
+
+      sub vcl_recv {
+          if (req.restarts > 0) {
+              set req.hash_always_miss = true;
+          }
+
+          if (req.method == "PURGE") {
+              if (client.ip !~ purge) {
+                  return (synth(405, "Method not allowed"));
+              }
+              # To use the X-Pool header for purging varnish during automated deployments, make sure the X-Pool header
+              # has been added to the response in your backend server config. This is used, for example, by the
+              # capistrano-magento2 gem for purging old content from varnish during it's deploy routine.
+              if (!req.http.X-Magento-Tags-Pattern && !req.http.X-Pool) {
+                  return (synth(400, "X-Magento-Tags-Pattern or X-Pool header required"));
+              }
+              if (req.http.X-Magento-Tags-Pattern) {
+                ban("obj.http.X-Magento-Tags ~ " + req.http.X-Magento-Tags-Pattern);
+              }
+              if (req.http.X-Pool) {
+                ban("obj.http.X-Pool ~ " + req.http.X-Pool);
+              }
+              return (synth(200, "Purged"));
+          }
+
+          set req.backend_hint = magento_director.backend("modsecurity-crs");
+
+          if (req.method != "GET" &&
+              req.method != "HEAD" &&
+              req.method != "PUT" &&
+              req.method != "POST" &&
+              req.method != "TRACE" &&
+              req.method != "OPTIONS" &&
+              req.method != "DELETE") {
+                /* Non-RFC2616 or CONNECT which is weird. */
+                return (pipe);
+          }
+
+          # health check
+          if (req.url ~ "^/varnish-health-check.html") {
+              return (synth(200, "Node alive"));
+          }
+
+          # use xdebug backend
+      #    if (req.http.cookie ~ "XDEBUG_SESSION=" && std.ip(req.http.X-Real-IP, "0.0.0.0") ~ xdebug-users) {
+      #        set req.backend_hint = magento_director.backend("xdebug");
+      #        return (pass);
+      #    }
+
+          # We only deal with GET and HEAD by default
+          if (req.method != "GET" && req.method != "HEAD") {
+              return (pass);
+          }
+
+          # Bypass customer, shopping cart, checkout
+          if (req.url ~ "/customer" || req.url ~ "/checkout") {
+              return (pass);
+          }
+
+          # Bypass health check requests
+          if (req.url ~ "^/(pub/)?(health_check.php)$") {
+              return (pass);
+          }
+
+          # Set initial grace period usage status
+          set req.http.grace = "none";
+
+          # normalize url in case of leading HTTP scheme and domain
+          set req.url = regsub(req.url, "^http[s]?://", "");
+
+          # collect all cookies
+          std.collect(req.http.Cookie);
+
+          # Compression filter. See https://www.varnish-cache.org/trac/wiki/FAQ/Compression
+          if (req.http.Accept-Encoding) {
+              if (req.url ~ "\.(jpg|jpeg|png|gif|gz|tgz|bz2|tbz|mp3|ogg|swf|flv)$") {
+                  # No point in compressing these
+                  unset req.http.Accept-Encoding;
+              } elsif (req.http.Accept-Encoding ~ "gzip") {
+                  set req.http.Accept-Encoding = "gzip";
+              } elsif (req.http.Accept-Encoding ~ "deflate" && req.http.user-agent !~ "MSIE") {
+                  set req.http.Accept-Encoding = "deflate";
+              } else {
+                  # unknown algorithm
+                  unset req.http.Accept-Encoding;
+              }
+          }
+
+          # Remove all marketing get parameters to minimize the cache objects
+          if (req.url ~ "(\?|&)(gclid|cx|ie|cof|siteurl|zanpid|origin|fbclid|mc_[a-z]+|utm_[a-z]+|_bta_[a-z]+)=") {
+              set req.url = regsuball(req.url, "(gclid|cx|ie|cof|siteurl|zanpid|origin|fbclid|mc_[a-z]+|utm_[a-z]+|_bta_[a-z]+)=[-_A-z0-9+()%.]+&?", "");
+              set req.url = regsub(req.url, "[?|&]+$", "");
+          }
+
+          # Static files caching
+          if (req.url ~ "^/(pub/)?(media|static|insecure)/") {
+              # image processing
+              if (req.url ~ "(?i)^/(pub/)?media/.*\.(jpe?g|png|gif|webp)(\?.*)?$" && req.restarts == 0 && std.healthy(imgproxy_directory.backend("imgproxy"))) {
+                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+                  set req.http.x-img-processing = "1";
+
+                  set req.http.X-img-width = regsub(req.url, ".*width=([0-9]+)(.*)?", "\1");
+                  if (req.http.X-img-width !~ "^[0-9]{2,4}$") { set req.http.X-img-width = "2000"; }
+                  set req.http.X-img-height = regsub(req.url, ".*height=([0-9]+)(.*)?", "\1");
+                  if (req.http.X-img-height !~ "^[0-9]{2,4}$") { set req.http.X-img-height = "2000"; }
+                  set req.http.X-img-path =  regsub(req.url, "^(/media/[^?]+)(.*)?", "local://\1");
+                  std.log("img-width: " + req.http.X-img-width);
+                  std.log("img-height: " + req.http.X-img-height);
+                  std.log("img-path: " + req.http.X-img-path);
+
+                  set req.url = "/insecure/rs:fit:" + req.http.X-img-width + ":" + req.http.X-img-height + "/plain/" + req.http.X-img-path;
+              }
+              else if (req.http.x-img-processing == "1") {
+                  # request might get restarted (see vcl_hit). make sure backend_hint is set.
+                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+              }
+              # Unless static content signing is deactivated it should be save to cache all static files
+              # else {
+              #  # Static files should not be cached by default
+              #  return (pass);
+              #}
+
+              # But if you use a few locales and don't use CDN you can enable caching static files by commenting previous line (#return (pass);) and uncommenting next 3 lines
+              unset req.http.Https;
+              unset req.http.X-Forwarded-Proto;
+              unset req.http.Cookie;
+          }
+
+          # Bypass authenticated GraphQL requests without a X-Magento-Cache-Id
+          if (req.url ~ "/graphql" && !req.http.X-Magento-Cache-Id && req.http.Authorization ~ "^Bearer") {
+              return (pass);
+          }
+
+          return (hash);
+      }
+
+      sub vcl_hash {
+          if (req.http.x-img-processing) {
+            if (req.http.accept ~ "image/webp") {
+              hash_data("webp=1");
+            }
+            else if (req.http.accept ~ "image/png") {
+              hash_data("png=1");
+            }
+          } else {
+            if (req.http.cookie ~ "X-Magento-Vary=") {
+                hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
+            }
+          }
+
+          # For multi site configurations to not cache each other's content
+          if (req.http.host) {
+              hash_data(req.http.host);
+          } else {
+              hash_data(server.ip);
+          }
+
+          if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.cookie ~ "X-Magento-Vary=") {
+              hash_data(regsub(req.http.cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
+          }
+
+          # To make sure http users don't see ssl warning
+          if (req.http.X-Forwarded-Proto) {
+              hash_data(req.http.X-Forwarded-Proto);
+          }
+
+          if (req.url ~ "/graphql") {
+              call process_graphql_headers;
+          }
+      }
+
+      sub process_graphql_headers {
+          if (req.http.X-Magento-Cache-Id) {
+              hash_data(req.http.X-Magento-Cache-Id);
+
+              # When the frontend stops sending the auth token, make sure users stop getting results cached for logged-in users
+              if (req.http.Authorization ~ "^Bearer") {
+                  hash_data("Authorized");
+              }
+          }
+
+          if (req.http.Store) {
+              hash_data(req.http.Store);
+          }
+
+          if (req.http.Content-Currency) {
+              hash_data(req.http.Content-Currency);
+          }
+      }
+
+      sub vcl_backend_response {
+
+          set beresp.grace = 3d;
+
+          if (beresp.http.content-type ~ "text") {
+              set beresp.do_esi = true;
+          }
+
+          if (bereq.url ~ "\.js$" || beresp.http.content-type ~ "text") {
+              set beresp.do_gzip = true;
+          }
+
+          if (beresp.http.X-Magento-Debug) {
+              set beresp.http.X-Magento-Cache-Control = beresp.http.Cache-Control;
+          }
+
+          # cache only successfully responses and 404s that are not marked as private
+          if (beresp.status != 200 &&
+                  beresp.status != 404 &&
+                  beresp.http.Cache-Control ~ "private") {
+              set beresp.uncacheable = true;
+              set beresp.ttl = 86400s;
+              return (deliver);
+          }
+
+          # validate if we need to cache it and prevent from setting cookie
+          if (beresp.ttl > 0s && (bereq.method == "GET" || bereq.method == "HEAD")) {
+              unset beresp.http.set-cookie;
+          }
+
+          # image processing
+          if (bereq.http.x-img-processing == "1") {
+              set beresp.storage = storage.images;
+              if (beresp.status != 200 && beresp.status != 304) {
+                  std.log("imgproxy - an error occurred, start over with fallback");
+                  return (abandon);
+              }
+          } else if (bereq.http.x-img-processing == "2") {
+              # imgproxy returned an error, return a cacheable 404
+              set beresp.status = 404;
+              set beresp.http.Cache-Control = "max-age=600";
+              set beresp.ttl = 600s;
+          }
+
+          # If page is not cacheable then bypass varnish for 2 minutes as Hit-For-Pass
+          if (beresp.ttl <= 0s ||
+              beresp.http.Surrogate-control ~ "no-store" ||
+              (!beresp.http.Surrogate-Control &&
+              beresp.http.Cache-Control ~ "no-cache|no-store") ||
+              beresp.http.Vary == "*") {
+              # Mark as Hit-For-Pass for the next 2 minutes
+              set beresp.ttl = 120s;
+              set beresp.uncacheable = true;
+          }
+
+          # If the cache key in the Magento response doesn't match the one that was sent in the request, don't cache under the request's key
+          if (bereq.url ~ "/graphql" && bereq.http.X-Magento-Cache-Id && bereq.http.X-Magento-Cache-Id != beresp.http.X-Magento-Cache-Id) {
+              set beresp.ttl = 0s;
+              set beresp.uncacheable = true;
+          }
+
+          return (deliver);
+      }
+
+      sub vcl_deliver {
+          if (resp.http.x-varnish ~ " ") {
+              set resp.http.X-Magento-Cache-Debug = "HIT";
+              set resp.http.Grace = req.http.grace;
+          } else {
+              set resp.http.X-Magento-Cache-Debug = "MISS";
+          }
+
+          # Not letting browser to cache non-static files.
+          if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(pub/)?(media|static|insecure)/") {
+              set resp.http.Pragma = "no-cache";
+              set resp.http.Expires = "-1";
+              set resp.http.Cache-Control = "no-store, no-cache, must-revalidate, max-age=0";
+          }
+
+          if (!resp.http.X-Magento-Debug) {
+              unset resp.http.Age;
+          }
+          unset resp.http.X-Magento-Debug;
+          unset resp.http.X-Magento-Tags;
+          unset resp.http.X-Powered-By;
+          unset resp.http.Server;
+          unset resp.http.X-Varnish;
+          unset resp.http.Via;
+          unset resp.http.Link;
+      }
+
+      sub vcl_hit {
+          if (obj.ttl >= 0s) {
+              # Hit within TTL period
+              return (deliver);
+          }
+          if (std.healthy(req.backend_hint)) {
+              if (obj.ttl + 300s > 0s) {
+                  # Hit after TTL expiration, but within grace period
+                  set req.http.grace = "normal (healthy server)";
+                  return (deliver);
+              } else {
+                  # Hit after TTL and grace expiration
+                  return (restart);
+              }
+          } else {
+              # server is not healthy, retrieve from cache
+              set req.http.grace = "unlimited (unhealthy server)";
+              return (deliver);
+          }
+      }
+
+      sub vcl_synth {
+          if (req.http.x-img-processing == "1") {
+              std.rollback(req);
+              set req.http.x-img-processing = "2";
+              return (restart);
+          }
+      }
+
+
+waf:
+  enabled: true
+  replicas: 1
+  annotations: {}
+  labels: {}
+  image:
+    repository: phoenixmedia/modsecurity-crs
+    tag: main
+    pullPolicy: Always
+  env:
+    # see more configuration options here: https://github.com/coreruleset/modsecurity-crs-docker/blob/main/README.md
+    # keep in mind that this is a nginx image...
+    # Replace <NAMESPACE> with the actual namespace where you are deploying
+    - name: BACKEND
+      value: "http://magento.<NAMESPACE>.svc.cluster.local:80"  # Forward traffic to magento
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 300m
+  
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8080
+      # if the probe fails 2 times within 10 secondary, the pod is considered as "not ready"
+    periodSeconds: 5
+    timeoutSeconds: 1
+    successThreshold: 2
+    failureThreshold: 2
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8080
+    # if the probe fails 3 times within 30 seconds, the pod will get restarted
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
