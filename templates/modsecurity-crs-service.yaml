@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: modsecurity-crs
+  name: {{ .Values.waf.name | default "modsecurity-crs" }}
 spec:
   type: ClusterIP
   clusterIP: None

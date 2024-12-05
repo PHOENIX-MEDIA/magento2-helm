@@ -849,8 +849,8 @@ waf:
   #annotations: {}
   #labels: {}
   #image:
-  #  repository: phoenixmedia/modsecurity-crs
-  #  tag: main
+  #  repository: owasp/modsecurity-crs:nginx-alpine
+  #  tag: 4.9.0-nginx-alpine-202412020312
   #  pullPolicy: Always
   #env:
   #  # see more configuration options here: https://github.com/coreruleset/modsecurity-crs-docker/blob/main/README.md

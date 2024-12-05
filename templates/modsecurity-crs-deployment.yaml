@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: modsecurity-crs
+  name: {{ .Values.waf.name | default "modsecurity-crs" }}
   annotations: {{ toYaml .Values.waf.annotations | nindent 4 }}
   labels: {{ toYaml .Values.waf.labels | nindent 4 }}
 spec:
@@ -26,11 +26,20 @@ spec:
           ports:
             - containerPort: 8080
               name: http
-          readinessProbe: {{ toYaml .Values.waf.readinessProbe | nindent 12 }}
-          livenessProbe: {{ toYaml .Values.waf.livenessProbe | nindent 12 }}
           env:
             - name: PORT
               value: "8080"
             {{ toYaml .Values.waf.env | nindent 12 }}
+
+          volumeMounts:
+            - name: modsecurity-configmap
+              mountPath: /docker-entrypoint.d/999-phoenix-proxy-behaviour.sh
+              subPath: entrypoint.sh
+
+      volumes:
+        - name: modsecurity-configmap
+          configMap:
+            name: {{ .Values.waf.name | default "modsecurity-crs" }}
+            defaultMode: 0777
     dnsPolicy: ClusterFirst
 {{- end -}}

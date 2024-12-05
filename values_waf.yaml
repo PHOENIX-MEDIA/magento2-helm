@@ -380,13 +380,25 @@ waf:
   annotations: {}
   labels: {}
   image:
-    repository: phoenixmedia/modsecurity-crs
-    tag: main
+    repository: owasp/modsecurity-crs:nginx-alpine
+    tag: 4.9.0-nginx-alpine-202412020312
     pullPolicy: Always
   env:
     # see more configuration options here: https://github.com/coreruleset/modsecurity-crs-docker/blob/main/README.md
     # keep in mind that this is a nginx image...
     # Replace <NAMESPACE> with the actual namespace where you are deploying
+    - name: MODSEC_DEBUG_LOG
+      value: "/dev/stdout"
+    - name: MODSEC_DEBUG_LOGLEVEL
+      value: "9"
+    - name: MODSEC_RULE_ENGINE
+      value: "DetectionOnly"
+    # CRS specific variables
+    - name: PARANOIA
+      value: "3"
+    - name: BLOCKING_PARANOIA
+      value: "3"
+    # PROXY variables
     - name: BACKEND
       value: "http://magento.<NAMESPACE>.svc.cluster.local:80"  # Forward traffic to magento
   resources:
@@ -412,3 +424,40 @@ waf:
     periodSeconds: 10
     timeoutSeconds: 1
     failureThreshold: 3
+  config:
+    entrypoint.sh: |-
+      #!/bin/sh
+
+      sed -i \
+      -e 's|^proxy_set_header X-Forwarded-For .*$|proxy_set_header X-Forwarded-For $http_x_forwarded_for;|' \
+      -e 's|^proxy_set_header X-Forwarded-Port .*$|proxy_set_header X-Forwarded-Port $http_x_forwarded_port;|' \
+      -e 's|^proxy_set_header X-Forwarded-Proto .*$|proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;|' \
+      /etc/nginx/includes/proxy_backend.conf
+
+      # Remove unnecessary rules
+      cat <<EOF >> /etc/modsecurity.d/modsecurity-override.conf
+      SecRuleRemoveByTag "language-aspnet"
+      SecRuleRemoveByTag "language-java"
+      SecRuleRemoveByTag "language-ldap"
+      SecRuleRemoveByTag "language-perl"
+      SecRuleRemoveByTag "language-powershell"
+      SecRuleRemoveByTag "language-ruby"
+
+      SecRuleRemoveByTag "platform-db2"
+      SecRuleRemoveByTag "platform-emc"
+      SecRuleRemoveByTag "platform-firebird"
+      SecRuleRemoveByTag "platform-frontbase"
+      SecRuleRemoveByTag "platform-hsqldb"
+      SecRuleRemoveByTag "platform-iis"
+      SecRuleRemoveByTag "platform-informix"
+      SecRuleRemoveByTag "platform-interbase"
+      SecRuleRemoveByTag "platform-internet-explorer"
+      SecRuleRemoveByTag "platform-maxdb"
+      SecRuleRemoveByTag "platform-msaccess"
+      SecRuleRemoveByTag "platform-mssql"
+      SecRuleRemoveByTag "platform-oracle"
+      SecRuleRemoveByTag "platform-pgsql"
+      SecRuleRemoveByTag "platform-sybase"
+      SecRuleRemoveByTag "platform-tomcat"
+      SecRuleRemoveByTag "platform-windows"
+      EOF
