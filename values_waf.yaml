@@ -112,6 +112,11 @@ varnish:
       #        return (pass);
       #    }
 
+          # bypass WAF
+          if (req.http.cookie ~ "admin=" && req.method == "POST") {
+              set req.backend_hint = magento_director.backend("magento-headless");
+          }
+
           # We only deal with GET and HEAD by default
           if (req.method != "GET" && req.method != "HEAD") {
               return (pass);
