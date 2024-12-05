@@ -1,0 +1,11 @@
+{{- if and .Values.waf .Values.waf.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.waf.name | default "modsecurity-crs" }}
+data:
+{{- range $key, $value := .Values.waf.config }}
+  {{ $key }}: |-
+{{ $value | indent 4 }}
+{{- end }}
+{{- end -}}
