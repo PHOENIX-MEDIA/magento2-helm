@@ -16,7 +16,7 @@ jobs:
         with:
           version: v3.12.1
 
-      - uses: actions/setup-python@v5.1.1
+      - uses: actions/setup-python@v5.4.0
         with:
           python-version: "3.10"
 
