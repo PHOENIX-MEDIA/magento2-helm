@@ -967,10 +967,25 @@ secrets:
       rabbitmq-password: Magento123
 
       # External Secrets Operator template examples
-#      MAGENTO_CLOUD_RELATIONSHIPS: >-
-#       {{ print "{\"database\": [{\"host\": \"mysql\", \"path\": \""  .mysql_database "\", \"password\": \"" .mysql_password "\", \"username\": \"" .mysql_user "\", \"port\": \"3306\"}], \"redis\": [{\"host\": \"redis-master\", \"port\": \"6379\"}], \"elasticsearch\": [{\"host\": \"elasticsearch\", \"scheme\": \"http\", \"port\": \"9200\"}], \"rabbitmq\": [{\"password\": \"" .rabbitmq_password "\", \"scheme\": \"amqp\", \"port\": \"5672\", \"host\": \"rabbitmq\", \"username\": \"" .rabbitmq_username "\"}]}" | b64enc }}
-#      MAGENTO_CLOUD_VARIABLES: >-
-#        {{ print "{\"ADMIN_FIRSTNAME\": \"Your Firstname\", \"ADMIN_LASTNAME\": \"Your Lastname\", \"ADMIN_EMAIL\": \"account@mail.com\", \"ADMIN_USERNAME\": \"" .magento_admin_username "\", \"ADMIN_PASSWORD\": \"" .magento_admin_password "\", \"ADMIN_URL\": \"admin\", \"CRYPT_KEY\": \"" .magento_crypt_key "\"}" | b64enc }}
+#        MAGENTO_CLOUD_RELATIONSHIPS: >-
+#          {{- $relationships := dict
+#            "database" (list (dict "host" "mysql" "path" .mysql_database "password" .mysql_password "username" .mysql_user "port" "3306"))
+#            "redis" (list (dict "host" "redis-master" "port" "6379"))
+#            "elasticsearch" (list (dict "host" "elasticsearch" "scheme" "http" "port" "9200"))
+#            "rabbitmq" (list (dict "password" .rabbitmq_password "scheme" "amqp" "port" "5672" "host" "rabbitmq" "username" .rabbitmq_username))
+#          -}}
+#          {{- $relationships | toJson | b64enc }}
+#        MAGENTO_CLOUD_VARIABLES: >-
+#          {{- $variables := dict
+#            "ADMIN_FIRSTNAME" "Your Firstname"
+#            "ADMIN_LASTNAME" "Your Lastname"
+#            "ADMIN_EMAIL" "account@mail.com"
+#            "ADMIN_USERNAME" .magento_admin_username
+#            "ADMIN_PASSWORD" .magento_admin_password
+#            "ADMIN_URL" "admin"
+#            "CRYPT_KEY" .magento_crypt_key
+#          -}}
+#          {{- $variables | toJson | b64enc }}
 #      RELAYHOST: 'my.relayhost.com'
 #      SMTP_USE_TLS: 'true'
 #      auth: '{{ htpasswd .basic_auth_username .basic_auth_password }}'
