@@ -426,6 +426,8 @@ varnish:
     - http_resp_size=98304
     - -p
     - workspace_backend=131072
+  logging:
+    customOutput: "%{Host}i %{Varnish:hitmiss}x %{X-Real-IP}i %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-agent}i\" %{Varnish:time_firstbyte}x %D"
 
   extraVolumes:
     - name: disk-cache
