@@ -455,6 +455,15 @@ varnish:
           .threshold = 3;
       }
 
+      probe waf_probe {
+          .url = "/healthz";
+          .timeout = 1s;
+          .interval = 5s;
+          .initial = 3;
+          .window = 5;
+          .threshold = 3;
+      }
+
       probe imgproxy_probe {
           .url = "/health";
           .timeout = 5s;
@@ -478,6 +487,11 @@ varnish:
           "magento";
       }
 
+      acl waf_bypass {
+          "localhost";
+          "127.0.0.1";
+      }
+
       #acl xdebug-users {
       #    "192.168.0.0/24";
       #}
@@ -492,7 +506,16 @@ varnish:
               ttl = 10s
           );
 
-          new imgproxy_directory = dynamic.director(
+          new waf_director = dynamic.director(
+              port = "8080",
+              share = HOST,
+              probe = waf_probe,
+              first_byte_timeout = 18000s,
+              between_bytes_timeout = 90s,
+              ttl = 10s
+          );
+
+          new imgproxy_director = dynamic.director(
               port = "80",
               share = HOST,
               probe = imgproxy_probe,
@@ -527,6 +550,21 @@ varnish:
           }
 
           set req.backend_hint = magento_director.backend("magento-headless");
+
+          # enable WAF
+          if (std.healthy(waf_director.backend("magento-waf"))) {
+              unset req.http.bypasswaf;
+              if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ waf_bypass) {
+                  set req.http.bypasswaf = "1";
+              }
+              if (req.http.cookie ~ "admin=" && req.method == "POST") {
+                  set req.http.bypasswaf = "1";
+              }
+              if (!req.http.bypasswaf) {
+                  set req.http.waf-executed = "1";
+                  set req.backend_hint = waf_director.backend("magento-waf");
+              }
+          }
 
           if (req.method != "GET" &&
               req.method != "HEAD" &&
@@ -598,8 +636,8 @@ varnish:
           # Static files caching
           if (req.url ~ "^/(pub/)?(media|static|insecure)/") {
               # image processing
-              if (req.url ~ "(?i)^/(pub/)?media/.*\.(jpe?g|png|gif|webp)(\?.*)?$" && req.restarts == 0 && std.healthy(imgproxy_directory.backend("imgproxy"))) {
-                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+              if (req.url ~ "(?i)^/(pub/)?media/.*\.(jpe?g|png|gif|webp)(\?.*)?$" && req.restarts == 0 && std.healthy(imgproxy_director.backend("imgproxy"))) {
+                  set req.backend_hint = imgproxy_director.backend("imgproxy");
                   set req.http.x-img-processing = "1";
 
                   set req.http.X-img-width = regsub(req.url, ".*width=([0-9]+)(.*)?", "\1");
@@ -615,7 +653,7 @@ varnish:
               }
               else if (req.http.x-img-processing == "1") {
                   # request might get restarted (see vcl_hit). make sure backend_hint is set.
-                  set req.backend_hint = imgproxy_directory.backend("imgproxy");
+                  set req.backend_hint = imgproxy_director.backend("imgproxy");
               }
               # Unless static content signing is deactivated it should be save to cache all static files
               # else {
@@ -831,6 +869,17 @@ imgproxy:
   image:
     tag: 3.27.2
   fullnameOverride: imgproxy
+  resources:
+    deployment:
+      replicaCount: 1
+      replicas:
+        cpuUtilization: 50
+        maxCount: 3
+        stabilizationInterval: 90
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 2
   persistence:
     enabled: true
     existingClaim: magento-data
@@ -855,6 +904,75 @@ imgproxy:
       IMGPROXY_LOCAL_FILESYSTEM_ROOT: "/images"
     fallbackImage:
       httpCode: 404
+
+
+waf:
+  enabled: false
+  autoscaling:
+    enabled: true
+  env:
+    - name: PORT
+      value: "8080"
+    - name: SERVER_TOKENS
+      value: ProductOnly
+    - name: MODSEC_RULE_ENGINE
+      value: "On"
+    - name: SET_REAL_IP_FROM
+      value: 10.0.0.0/8
+    - name: PARANOIA
+      value: "3"
+    - name: BLOCKING_PARANOIA
+      value: "3"
+  backend: "http://magento"
+  securityRules:
+    REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |-
+      # skip health check
+      SecRule REQUEST_URI "@streq /healthz" "id:10001,phase:1,pass,nolog,ctl:ruleEngine=Off"
+      SecRule REQUEST_URI "@streq /health_check.php" "id:10002,phase:1,pass,nolog,ctl:ruleEngine=Off"
+
+    RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf: |-
+      # remove rules for unrelated languages
+      SecRuleRemoveByTag "language-aspnet"
+      SecRuleRemoveByTag "language-java"
+      SecRuleRemoveByTag "language-ldap"
+      SecRuleRemoveByTag "language-perl"
+      SecRuleRemoveByTag "language-powershell"
+      SecRuleRemoveByTag "language-ruby"
+
+      # remove rules for unrelated platforms
+      SecRuleRemoveByTag "platform-db2"
+      SecRuleRemoveByTag "platform-emc"
+      SecRuleRemoveByTag "platform-firebird"
+      SecRuleRemoveByTag "platform-frontbase"
+      SecRuleRemoveByTag "platform-hsqldb"
+      SecRuleRemoveByTag "platform-iis"
+      SecRuleRemoveByTag "platform-informix"
+      SecRuleRemoveByTag "platform-interbase"
+      SecRuleRemoveByTag "platform-internet-explorer"
+      SecRuleRemoveByTag "platform-maxdb"
+      SecRuleRemoveByTag "platform-msaccess"
+      SecRuleRemoveByTag "platform-mssql"
+      SecRuleRemoveByTag "platform-oracle"
+      SecRuleRemoveByTag "platform-pgsql"
+      SecRuleRemoveByTag "platform-sybase"
+      SecRuleRemoveByTag "platform-tomcat"
+      SecRuleRemoveByTag "platform-windows"
+
+      #######################################
+      # remove rules conflicting with Magento
+      #######################################
+
+      # conflicts with structure data in section_data_ids cookie
+      SecRuleRemoveById 920272
+      SecRuleRemoveById 942120
+      SecRuleRemoveById 942200
+      SecRuleRemoveById 942340
+      SecRuleRemoveById 942420
+      SecRuleRemoveById 942431
+      SecRuleRemoveById 942490
+
+      # pass 500 errors (important for API requests)
+      SecRuleRemoveById 950100
 
 
 persistence:

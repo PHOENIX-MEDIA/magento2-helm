@@ -42,3 +42,8 @@ dependencies:
     version: ~0.9.0
     repository: https://helm.imgproxy.net/
     condition: imgproxy.enabled
+  - name: modsecurity-crs-proxy
+    version: ~0.1.0
+    repository: oci://registry-1.docker.io/phoenixmedia
+    alias: waf
+    condition: modsecurity.enabled
