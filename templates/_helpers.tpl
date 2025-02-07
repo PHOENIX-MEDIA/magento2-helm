@@ -58,7 +58,7 @@ Container image
 {{- define "magento.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
-{{- $tag := "" -}}
+{{- $tag := printf ":%s" .Chart.AppVersion -}}
 {{- if .Values.image.tag }}
 {{- $tag = printf ":%s" .Values.image.tag -}}
 {{- end -}}

@@ -12,7 +12,7 @@ global:
 image:
   # registry:
   repository: phoenixmedia/magento2
-  tag: "2.4.7-p3"
+  tag: ""
   pullPolicy: IfNotPresent
 
 
@@ -156,10 +156,6 @@ magento:
       image: busybox
       imagePullPolicy: IfNotPresent
       command: ['sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done']
-    - name: check-rabbitmq
-      image: busybox
-      imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
     - name: check-mysql
       image: busybox
       imagePullPolicy: IfNotPresent
@@ -167,7 +163,11 @@ magento:
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+    - name: check-rabbitmq
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
     - name: check-magento-install
       image: busybox
       imagePullPolicy: IfNotPresent
@@ -293,10 +293,6 @@ cronjob:
       image: busybox
       imagePullPolicy: IfNotPresent
       command: ['sh', '-c', 'while ! nc -z -v -w5 redis-headless 6379 2>&1| grep -q open; do echo \"waiting for redis\"; sleep 1s; done']
-    - name: check-rabbitmq
-      image: busybox
-      imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq-headless 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
     - name: check-mysql
       image: busybox
       imagePullPolicy: IfNotPresent
@@ -304,14 +300,26 @@ cronjob:
     - name: check-elasticsearch
       image: busybox
       imagePullPolicy: IfNotPresent
-      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+      command: ['sh', '-c', 'while ! nc -z -v -w5 elasticsearch-master 9200 2>&1| grep -q open; do echo \"waiting for elasticsearch\"; sleep 1s; done']
+    - name: check-rabbitmq
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ['sh', '-c', 'while ! nc -z -v -w5 rabbitmq 5672 2>&1| grep -q open; do echo \"waiting for rabbitmq\"; sleep 1s; done']
 
   terminationGracePeriodSeconds: 600
   lifecycle:
     preStop:
       exec:
-        command: ["sh", "-c", "rm -rf /etc/crontabs/nginx; while [ $(ps aux | grep php| wc -l) -gt 2 ]; do echo 'php scripts running'; sleep 1s; done"]
-
+        command:
+          - sh
+          - -c
+          - |
+            rm -rf /etc/crontabs/nginx
+            while [ $(ps aux | grep php | grep -v grep | wc -l) -gt 0 ]; do
+              echo 'php scripts running'
+              sleep 1
+            done
+            echo 'No more PHP scripts running, exiting'
 
 ########## MYSQL ##########
 mariadb:
@@ -319,7 +327,7 @@ mariadb:
   fullnameOverride: mysql
   nameOverride: mysql
   image:
-    tag: 10.4.25-debian-11-r9
+    tag: 10.6.20-debian-12-r2
   replication:
     enabled: false
   volumePermissions:
@@ -329,11 +337,11 @@ mariadb:
     username: magento
     existingSecret: general-secrets
 
-  master:
+  primary:
     podLabels: {}
     persistence:
       size: 10Gi
-    resources: {}
+    resourcesPreset: none
   slave:
     replicas: 0
 
@@ -349,15 +357,15 @@ redis:
   usePassword: false
   architecture: standalone
   master:
-    resources: {}
+    resourcesPreset: none
     disableCommands: []
-
 
 elasticsearch:
   enabled: false
   image: phoenixmedia/magento-cloud-docker-elasticsearch
   imageTag: 7.17-1.3.5
   replicas: 1
+  terminationGracePeriod: 15
   minimumMasterNodes: 1
   esJavaOpts: "-Xmx256M -Xms256M"
   extraEnvs:
@@ -374,7 +382,8 @@ opensearch:
     repository: magento/magento-cloud-docker-opensearch
     tag: 2.5-1.4.0
   replicas: 1
-  masterService: "elasticsearch"
+  terminationGracePeriod: 15
+  masterService: "elasticsearch-master"
   opensearchJavaOpts: "-Xmx256M -Xms256M"
   sysctlInit:
     enabled: true
@@ -402,7 +411,7 @@ varnish:
   fullnameOverride: "varnish"
   image:
     repository: varnish
-    tag: "7.3-alpine"
+    tag: "7.5-alpine"
     pullPolicy: Always
   securityContext:
     runAsUser: 0
@@ -681,7 +690,6 @@ varnish:
       }
 
       sub vcl_backend_response {
-
           set beresp.grace = 3d;
 
           if (beresp.http.content-type ~ "text") {
@@ -813,10 +821,13 @@ rabbitmq:
   rabbitmq:
     rbac:
       create: false
+  resourcesPreset: none
 
 
 imgproxy:
   enabled: false
+  image:
+    tag: 3.27.2
   fullnameOverride: imgproxy
   persistence:
     enabled: true
@@ -855,7 +866,7 @@ persistence:
   storageClassName: "files"
 
 ## Kubernetes configuration
-## For minikube, set this to NodePort, elsewhere use LoadBalancer
+## For minikube set this to NodePort, otherwise use LoadBalancer
 ##
 service:
   type: ClusterIP
@@ -942,7 +953,7 @@ secrets:
     data:
       # customize MAGENTO_CLOUD_* values. use 'echo "<string>" | base64 -d' to read values.
       MAGENTO_CLOUD_ROUTES: eyJodHRwOlwvXC9sb2NhbGhvc3RcLyI6eyJ0eXBlIjoidXBzdHJlYW0iLCJvcmlnaW5hbF91cmwiOiJodHRwOlwvXC97ZGVmYXVsdH1cLyJ9fQ==
-      MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwib3BlbnNlYXJjaCI6IFt7Imhvc3QiOiAiZWxhc3RpY3NlYXJjaCIsICJzY2hlbWUiOiAiaHR0cCIsICJwb3J0IjogIjkyMDAifV0sInJhYmJpdG1xIjpbeyJob3N0IjoicmFiYml0bXEiLCAidXNlcm5hbWUiOiJwaG9lbml4IiwgInBhc3N3b3JkIjoiTWFnZW50bzEyMyIsICJzY2hlbWUiOiJhbXFwIiwgInBvcnQiOiAiNTY3MiJ9XX0=
+      MAGENTO_CLOUD_RELATIONSHIPS: eyJkYXRhYmFzZSI6W3siaG9zdCI6Im15c3FsIiwicGF0aCI6Im1hZ2VudG8iLCJwYXNzd29yZCI6InRvcFNlY3JldCIsInVzZXJuYW1lIjoibWFnZW50byIsInBvcnQiOiIzMzA2In1dLCJyZWRpcyI6W3siaG9zdCI6InJlZGlzIiwgInBvcnQiOiAiNjM3OSJ9XSwib3BlbnNlYXJjaCI6IFt7Imhvc3QiOiAiZWxhc3RpY3NlYXJjaC1tYXN0ZXIiLCAic2NoZW1lIjogImh0dHAiLCAicG9ydCI6ICI5MjAwIn1dLCJyYWJiaXRtcSI6W3siaG9zdCI6InJhYmJpdG1xIiwgInVzZXJuYW1lIjoicGhvZW5peCIsICJwYXNzd29yZCI6Ik1hZ2VudG8xMjMiLCAic2NoZW1lIjoiYW1xcCIsICJwb3J0IjogIjU2NzIifV19
       MAGENTO_CLOUD_VARIABLES: eyJBRE1JTl9GSVJTVE5BTUUiOiJZb3VyIEZpcnN0bmFtZSIsIkFETUlOX0xBU1ROQU1FIjoiWW91ciBMYXN0bmFtZSIsIkFETUlOX0VNQUlMIjoiYWNjb3VudEBtYWlsLmNvbSIsIkFETUlOX1VTRVJOQU1FIjoiYWRtaW5pc3RyYXRvciIsIkFETUlOX1BBU1NXT1JEIjoidG9wQFNlY3JlMSIsIkFETUlOX1VSTCI6ImFkbWluIiwiQ1JZUFRfS0VZIjoiNmZnMzdqYzUyOWUwZDlmMDY5NjY1Y2JjOWZlMTcwYjIifQ==
       RELAYHOST: my.relayhost.com
       SMTP_USE_TLS: "false"
