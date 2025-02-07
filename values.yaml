@@ -380,7 +380,7 @@ opensearch:
   enabled: true
   image:
     repository: magento/magento-cloud-docker-opensearch
-    tag: 2.5-1.4.0
+    tag: 2.12-1.4.0
   replicas: 1
   terminationGracePeriod: 15
   masterService: "elasticsearch-master"

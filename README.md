@@ -370,6 +370,9 @@ Navigate to `http://<your-domain>` and checkout the new Magento2 instance.
 This guide and the `values_gke.yaml` file are configured for the *magento.phoenix-media.rocks* example domain. You will need to update a few lines as described in [this section](https://github.com/PHOENIX-MEDIA/magento2-helm#updating-domains-magento_cloud_-variables-and-values-files).
 
 ## Changelog
+
+> Discontinued after 2.7.0. See Github releases for detailed changes.
+
 ### [2.7.0] - 2024-02-20
 - Allow custom annotations and labels in all resources 
 - Add Horizontal Pod Autoscaler (HPA) and Pod Disruption Budget (PDB) for Magento workload
