@@ -962,14 +962,32 @@ waf:
       # remove rules conflicting with Magento
       #######################################
 
-      # conflicts with structure data in section_data_ids cookie
-      SecRuleRemoveById 920272
-      SecRuleRemoveById 942120
-      SecRuleRemoveById 942200
-      SecRuleRemoveById 942340
-      SecRuleRemoveById 942420
-      SecRuleRemoveById 942431
-      SecRuleRemoveById 942490
+      # conflicts with structure data e.g. in section_data_ids cookie
+      SecRuleUpdateTargetById 920272 !REQUEST_HEADERS:cookie
+      SecRuleUpdateTargetById 942120 !REQUEST_COOKIES
+      SecRuleUpdateTargetById 942200 !REQUEST_COOKIES
+      SecRuleUpdateTargetById 942340 !REQUEST_COOKIES
+      SecRuleUpdateTargetById 942420 !REQUEST_COOKIES
+      SecRuleUpdateTargetById 942431 !REQUEST_COOKIES
+      SecRuleUpdateTargetById 942490 !REQUEST_COOKIES
+      
+      # mage-messages cookie might contain suspicious content, however that's fine
+      SecRuleUpdateTargetById 932200 !REQUEST_COOKIES:mage-messages
+      SecRuleUpdateTargetByTag "attack-xss" !REQUEST_COOKIES:mage-messages
+      SecRuleUpdateTargetByTag "attack-sqli" !REQUEST_COOKIES:mage-messages
+      
+      # sections parameter might contain suspicious content, however that's fine
+      SecRuleUpdateTargetByTag "attack-sqli" !ARGS:sections
+      
+      # "id" param is often used in parameters
+      SecRuleUpdateTargetById 932237 !REQUEST_HEADERS:Referer
+      SecRuleRemoveById 932236
+      
+      # allow umlauts in POST requests
+      SecRuleUpdateTargetById 920272 !ARGS
+      
+      # disable parameter count for checkout address
+      SecRuleRemoveById 921180
 
       # pass 500 errors (important for API requests)
       SecRuleRemoveById 950100
