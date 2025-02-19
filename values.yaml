@@ -412,7 +412,6 @@ varnish:
   image:
     repository: varnish
     tag: "7.5-alpine"
-    pullPolicy: Always
   securityContext:
     runAsUser: 0
   rolloutDeployment: false
