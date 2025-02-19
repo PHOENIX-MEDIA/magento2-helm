@@ -384,7 +384,7 @@ opensearch:
   replicas: 1
   terminationGracePeriod: 15
   masterService: "elasticsearch-master"
-  opensearchJavaOpts: "-Xmx256M -Xms256M"
+  opensearchJavaOpts: "-Xmx512M -Xms512M"
   sysctlInit:
     enabled: true
   config:
