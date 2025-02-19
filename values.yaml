@@ -559,6 +559,9 @@ varnish:
               if (req.http.cookie ~ "admin=" && req.method == "POST") {
                   set req.http.bypasswaf = "1";
               }
+              if (req.url ~ "^/page_cache/") {
+                  set req.http.bypasswaf = "1";
+              }
               if (!req.http.bypasswaf) {
                   set req.http.waf-executed = "1";
                   set req.backend_hint = waf_director.backend("magento-waf");
