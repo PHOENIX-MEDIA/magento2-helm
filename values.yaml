@@ -1120,7 +1120,7 @@ secrets:
 #          {{- $relationships := dict
 #            "database" (list (dict "host" "mysql" "path" .mysql_database "password" .mysql_password "username" .mysql_user "port" "3306"))
 #            "redis" (list (dict "host" "redis-master" "port" "6379"))
-#            "elasticsearch" (list (dict "host" "elasticsearch" "scheme" "http" "port" "9200"))
+#            "opensearch" (list (dict "host" "elasticsearch-master" "scheme" "http" "port" "9200"))
 #            "rabbitmq" (list (dict "password" .rabbitmq_password "scheme" "amqp" "port" "5672" "host" "rabbitmq" "username" .rabbitmq_username))
 #          -}}
 #          {{- $relationships | toJson | b64enc }}
