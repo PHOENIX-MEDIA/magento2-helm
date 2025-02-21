@@ -932,7 +932,7 @@ waf:
     - name: SERVER_TOKENS
       value: ProductOnly
     - name: MODSEC_RULE_ENGINE
-      value: "On"
+      value: "DetectionOnly" # set to "On" to enable blocking
     - name: SET_REAL_IP_FROM
       value: 10.0.0.0/8
     - name: PARANOIA
@@ -1016,6 +1016,8 @@ waf:
       
       # pass 500 errors (important for API requests)
       SecRuleRemoveById 950100
+
+
 persistence:
   enabled: true
   name: magento-data
