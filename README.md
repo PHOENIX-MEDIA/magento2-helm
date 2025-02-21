@@ -240,6 +240,30 @@ this information is used by imgproxy to deliver the image in the desired resolut
 > In case imgproxy can't serve the image the request will be gracefully forwarded to the Magento pod, which serves the 
 configured placeholder image for requests to `media/catalog` and `media/wysiwyg`. The relevant VCL subrouting is `vcl_synth`.
 
+## Web Application Firewall (WAF)
+
+In version 2.8, we've introduced a Web Application Firewall (WAF) leveraging the [OWASP Core Rule Set (CRS)](https://coreruleset.org/) to enhance the security of your Magento 2 deployment.
+The WAF operates as an intermediary between Varnish and Magento2, inspecting incoming requests to detect and mitigate malicious activities
+such as SQL injection, Cross-Site Scripting (XSS), and Remote Code Execution (RCE).
+
+### Important Considerations
+
+> By integrating this WAF, your Magento 2 deployment gains an additional security layer, proactively identifying and mitigating potential threats.
+> We strongly recommend thorough testing and log analysis before enabling the blocking functionality to ensure legitimate traffic remains unaffected.
+
+1. **Testing Before Enabling Blocking Mode**
+  - Initially, the WAF is set to `DetectionOnly` mode. It's crucial to monitor the logs to identify and address any false positives before switching to blocking mode (see `MODSEC_RULE_ENGINE`).
+  - Enable detailed logging by setting the `MODSEC_DEBUG_LOG` environment variable.
+
+2. **Rule Customization for Magento 2**
+  - The `values.yaml` file includes tailored rule adjustments to align with Magento 2's operations, such as exceptions for specific cookies (`mage-messages`) and API parameters.
+  - Unnecessary rules for unrelated languages and platforms have been disabled to optimize performance.
+
+3. **Scalability and Performance**
+  - The WAF supports autoscaling to handle varying traffic loads efficiently.
+  - Only requests that comply with the defined security rules are forwarded to the Magento application, ensuring that malicious traffic is filtered out.
+
+For a comprehensive understanding and additional configuration options, please refer to the [official documentation](https://github.com/coreruleset/modsecurity-crs-docker).
 
 ## Helm deployment
 The chart requires [Helm 3.x](https://helm.sh/) and has been tested with 3.9.0.
