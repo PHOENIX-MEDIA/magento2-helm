@@ -16,7 +16,7 @@ icon: https://github.com/magento/magento2/blob/2.4-develop/lib/web/images/logo.s
 dependencies:
   - name: mariadb
     repository: https://charts.bitnami.com/bitnami
-    version: ~19.0.0
+    version: ~17.0.0
     condition: mariadb.enabled
   - name: redis
     repository: https://charts.bitnami.com/bitnami
