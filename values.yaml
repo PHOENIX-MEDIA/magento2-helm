@@ -883,7 +883,7 @@ rabbitmq:
 imgproxy:
   enabled: false
   image:
-    tag: 3.27.2
+    tag: v3.27.2
   fullnameOverride: imgproxy
   resources:
     deployment:
