@@ -924,6 +924,7 @@ imgproxy:
 
 waf:
   enabled: false
+  fullnameOverride: magento-waf
   autoscaling:
     enabled: true
   env:
