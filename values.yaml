@@ -946,6 +946,9 @@ waf:
 #      value: "4"
   backend: "http://magento"
   securityRules:
+    modsecurity-override.conf: |-
+      ProxyErrorOverride Off
+
     REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf: |-
       # skip health check
       SecRule REQUEST_URI "@streq /healthz" "id:10001,phase:1,pass,nolog,ctl:ruleEngine=Off"
