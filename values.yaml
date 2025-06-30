@@ -534,7 +534,7 @@ varnish:
           }
 
           # use xdebug backend
-      #    if (req.http.cookie ~ "XDEBUG_SESSION=" && std.ip(req.http.X-Real-IP, "0.0.0.0") ~ xdebug-users) {
+      #    if (req.http.cookie ~ "XDEBUG_(SESSION|PROFILE)=" && std.ip(req.http.X-Real-IP, "0.0.0.0") ~ xdebug-users) {
       #        set req.backend_hint = magento_director.backend("xdebug");
       #        return (pass);
       #    }
