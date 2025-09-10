@@ -277,6 +277,8 @@ mariadb:
   fullnameOverride: mysql
   nameOverride: mysql
   image:
+    registry: public.ecr.aws
+    repository: bitnami/mariadb
     tag: 10.4.25-debian-11-r9
   replication:
     enabled: false
@@ -309,7 +311,10 @@ redis:
   master:
     resources: {}
     disableCommands: []
-
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/redis
+    tag: 6.2.7-debian-11-r11
 
 elasticsearch:
   enabled: true
@@ -317,7 +322,7 @@ elasticsearch:
   imageTag: 7.17-1.3.5
   replicas: 1
   minimumMasterNodes: 1
-  esJavaOpts: "-Xmx2g -Xms2g"
+  esJavaOpts: "-Xmx1g -Xms1g"
   extraEnvs:
     - name: cluster.initial_master_nodes
       value: null
@@ -766,7 +771,12 @@ rabbitmq:
     username: phoenix
     existingPasswordSecret: general-secrets
     existingErlangSecret: general-secrets
-
+  rbac:
+    create: false
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/rabbitmq
+    tag: 3.10.8-debian-11-r4
 
 imgproxy:
   enabled: false
