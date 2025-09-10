@@ -319,6 +319,8 @@ mariadb:
   fullnameOverride: mysql
   nameOverride: mysql
   image:
+    registry: public.ecr.aws
+    repository: bitnami/mariadb
     tag: 10.4.25-debian-11-r9
   replication:
     enabled: false
@@ -351,7 +353,10 @@ redis:
   master:
     resources: {}
     disableCommands: []
-
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/redis
+    tag: 6.2.7-debian-11-r11
 
 elasticsearch:
   enabled: false
@@ -810,10 +815,12 @@ rabbitmq:
     username: phoenix
     existingPasswordSecret: general-secrets
     existingErlangSecret: general-secrets
-  rabbitmq:
-    rbac:
-      create: false
-
+  rbac:
+    create: false
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/rabbitmq
+    tag: 3.11.18-debian-11-r0
 
 imgproxy:
   enabled: false
