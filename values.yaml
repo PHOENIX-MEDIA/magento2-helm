@@ -909,25 +909,15 @@ imgproxy:
     existingClaim: magento-data
     mountPath: /images/media
     subPath: media
-  features:
-    compression:
-      jpegProgressive: true
-    urlSignature:
-      enabled: false
-    server:
-      useEtag: true
-      # TTL of 1 week
-      ttl: 604800
-    security:
-      allowedSources: "local://"
-    formatsSupportDetection:
-      webp:
-        enabled: true
-        enforced: true
-    custom:
-      IMGPROXY_LOCAL_FILESYSTEM_ROOT: "/images"
-    fallbackImage:
-      httpCode: 404
+  env:
+    IMGPROXY_JPEG_PROGRESSIVE: "true"
+    IMGPROXY_USE_ETAG: "true"
+    # TTL of 1 week
+    IMGPROXY_TTL: "604800"
+    IMGPROXY_ALLOWED_SOURCES: "local://"
+    IMGPROXY_AUTO_WEBP: "true"
+    IMGPROXY_ENFORCE_WEBP: "true"
+    IMGPROXY_FALLBACK_IMAGE_HTTP_CODE: "404"
 
 
 waf:

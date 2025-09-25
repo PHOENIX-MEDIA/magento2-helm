@@ -39,7 +39,7 @@ dependencies:
     version: ~14.7.0
     condition: rabbitmq.enabled
   - name: imgproxy
-    version: ~0.9.0
+    version: ~1.0.0
     repository: https://helm.imgproxy.net/
     condition: imgproxy.enabled
   - name: modsecurity-crs-proxy
