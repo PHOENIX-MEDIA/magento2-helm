@@ -904,6 +904,8 @@ imgproxy:
         requests:
           memory: 512Mi
           cpu: 2
+    serviceMonitor:
+      enabled: false
   persistence:
     enabled: true
     existingClaim: magento-data
