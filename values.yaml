@@ -1218,7 +1218,7 @@ secrets:
       name: vault-secrets
       labels: {}
       annotations: {}
-      refreshInterval: "1m"
+      refreshInterval: "1m0s"
 
       data:
 #        - secretKey: magento_admin_username
